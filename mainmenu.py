@@ -1,5 +1,5 @@
 import tkinter as tk
-from server import INITSERVER as serv
+import server as serv
 
 import random
 import string
@@ -79,23 +79,6 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
             self.exit = cust.CTkButton(self.masterframe2, text = "Exit", fg_color = "Red", text_color = "White", hover_color = "Maroon", command = exit)
             self.exit.pack(side = cust.BOTTOM, pady = 5, padx = 5)
 
-            #self.initserver()
-
-
-        def initserver(self):
-
-            self.PORT = 5000
-        
-            self.SERVER = "192.168.0.19" #exact server address; may need to be changed depending on the computer
-
-            self.ADDRESS = (self.SERVER, self.PORT)
-
-            self.FORMAT = "utf-8"
-
-            self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-            self.client.connect(self.ADDRESS)
-
 
         def packcreateframe(self): 
 
@@ -169,6 +152,9 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
 
                 serv.revlobbyname(self.enterlname.get())
 
+                self.enterlname.delete(0, cust.END)
+                self.enterlname.focus_set()
+
                 self.withdraw()
                 
                 self.h = GUI2()
@@ -183,7 +169,7 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
 
             else:
 
-                x = serv.givlobbycode()
+                x = serv.givhostcode()
                 
                 try: 
 
@@ -193,7 +179,7 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
 
                     else:
                     
-                        if self.enterlcode.get() == serv.givlobbycode():
+                        if self.enterlcode.get() == serv.givhostcode():
 
                             self.withdraw()
                             
@@ -213,55 +199,23 @@ class GUI2(cust.CTk): #admin/host UI
 
     def __init__(self):
 
-        super().__init__()
+        #global lobbycode
 
-        self.PORT = 5000
-        
-        # An IPv4 address is obtained
-        # for the server.
-        self.SERVER = socket.gethostbyname(socket.gethostname())
-        
-        # Address is stored as a tuple
-        self.ADDRESS = (self.SERVER, self.PORT)
-        
-        # the format in which encoding
-        # and decoding will occur
-        self.FORMAT = "utf-8"
-        
-        # Lists that will contains
-        # all the clients connected to
-        # the server and their names.
-        self.clients, self.names = [], []
-        
-        # Create a new socket for
-        # the server
-        self.server = socket.socket(socket.AF_INET,
-                            socket.SOCK_STREAM)
-        
-        # bind the address of the
-        # server to the socket
-        self.server.bind(self.ADDRESS)
-        
 
         self.master2 = cust.CTkToplevel()
 
-        
+
         self.master2.title("Admin/Host Lobby")
         self.master2.geometry(f"{906}x{400}")
 
 
         self.master2.protocol("WM_DELETE_WINDOW", self.leavewindow)
 
-        
 
         self.master2.grid_rowconfigure(0, weight = 1)
 
         self.master2.grid_columnconfigure(0, weight = 1)
         self.master2.grid_columnconfigure(1, weight = 1)
-
-        #self.grid_rowconfigure(1, weight = 1)
-        #self.grid_rowconfigure(2, weight = 1)
-        #self.master2.grid_rowconfigure(0, weight = 1)
 
         self.frame_left = cust.CTkFrame(self.master2, corner_radius = 0, bg_color = "White")
         self.frame_left.grid(row = 0, column = 0, sticky = "nswe", padx = 20, pady = 20)
@@ -280,15 +234,8 @@ class GUI2(cust.CTk): #admin/host UI
         self.frame_left.grid_columnconfigure(0, weight = 1)
         self.frame_left.grid_columnconfigure(1, weight = 1)
         self.frame_left.grid_columnconfigure(2, weight = 1)
-        #self.frame_left.grid_columnconfigure(3, weight = 1)
-        #self.frame_left.grid_columnconfigure(4, weight = 1)
-        #self.frame_left.grid_columnconfigure(5, weight = 1)
-
-        #self.grid_rowconfigure(1, weight = 1)
-        #self.grid_rowconfigure(2, weight = 1)
-        #self.master2.grid_rowconfigure(0, weight = 1)
-
         
+
         self.leave = cust.CTkButton(self.frame_left, text = "Leave", fg_color = "Red", text_color = "White", hover_color = "Maroon", command = lambda: self.leavewindow())
         self.leave.grid(row = 0, column = 0, sticky = "n", padx = 1, pady = 1)
 
@@ -305,11 +252,9 @@ class GUI2(cust.CTk): #admin/host UI
         self.ecdpower = cust.CTkButton(self.frame_left, text = "Off", fg_color = "Black", text_color = "White", hover_color = "Silver", command = lambda: Thread(target = self.startstream).start())
         self.ecdpower.grid(row = 1, column = 2)
 
-        #print (self.ecdpower.cget('fg_color'))
-
-
         self.bigframe = cust.CTkFrame(self.frame_left, corner_radius = 0, border_color = "Black")
         self.bigframe.grid(row = 4, column = 0, sticky= "nswe", columnspan = 2, rowspan = 4, pady = 20, padx = 20)
+
 
         self.bigframe.grid_rowconfigure(0, weight = 1)
         self.bigframe.grid_rowconfigure(1, weight = 1)
@@ -336,10 +281,10 @@ class GUI2(cust.CTk): #admin/host UI
         self.lstatus.grid(row = 0, column = 0, sticky = "nsew")
 
 
-        self.idframe = cust.CTkFrame(self.bigframe, border_color = "Blue")
+        self.idframe = cust.CTkFrame(self.bigframe, border_color = "Blue", corner_radius = 0)
         self.idframe.grid(row = 0, column = 4, sticky = "nsew")
 
-        self.lid = cust.CTkLabel(self.idframe, text = "ID Number", text_font = ("Times New Roman", 10), fg = "Black")
+        self.lid = cust.CTkLabel(self.idframe, text = "Active/Inactivity", text_font = ("Times New Roman", 10), fg = "Black")
         self.lid.grid(row = 0, column = 0, sticky = "nsew")
 
 
@@ -368,21 +313,19 @@ class GUI2(cust.CTk): #admin/host UI
         self.notiflist = tk.Listbox(self.frame_right)
         self.notiflist.grid(row = 1, column = 0, sticky = "nswe", columnspan = 1, rowspan = 2, pady = 10, padx = 10)
 
+        #messagebox.showinfo("Your Lobby Code!", "Your lobby code is: " + lobbycode)
+
         self.makelobbycode()
 
-        #self.event = threading.Event()
 
         print("Before INITSERVER")
 
-        #self.s = INITSERVER()
-
         print ("After INITSERVER")
-        
-        #self.process = Process(target = self.s.startChat)
+       
 
-        self.master2.resizable(False, False)
+        #self.master2.resizable(False, False)
 
-        self.thread = Thread(target = self.startChat)
+        self.thread = Thread(target = serv.startChat)
 
         print ("After Thread INITIALIZATION")
 
@@ -390,10 +333,21 @@ class GUI2(cust.CTk): #admin/host UI
 
         print ("After Thread start")
 
-        #self.process.start()
 
-        #self.appendtolist()
-        #self.thread.join()
+    def initserver(self):
+
+        self.PORT = 5000
+    
+        self.SERVER = "192.168.0.19" #exact server address; may need to be changed depending on the computer
+
+        self.ADDRESS = (self.SERVER, self.PORT)
+
+        self.FORMAT = "utf-8"
+
+        self.host = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        self.host.connect(self.ADDRESS)
+    
 
     def startstream(self):
 
@@ -438,115 +392,38 @@ class GUI2(cust.CTk): #admin/host UI
 
             print (traceback.format_exc())
 
-    def startChat(self):
-
-        print("server is working on " + self.SERVER)
     
-        # listening for connections
-        self.server.listen(30)
 
-        try:
-
-            while True:
-
-                #if (self.checksignal == 0):
-                
-                    # accept connections and returns
-                    # a new connection to the client
-                    #  and  the address bound to it
-                    self.conn, self.addr = self.server.accept()
-                    #self.conn.send("NAME".encode(FORMAT))
-
-                    # 1024 represents the max amount
-                    # of data that can be received (bytes)
-                    self.name = self.conn.recv(1024).decode(self.FORMAT)
-
-                    # append the name and client
-                    # to the respective list
-
-                    #self.names.append(self.name)
-                    self.clients.append(self.conn)
-
-                    #if "sleep" in self.name or "awake" in self.name:
-
-                        #self.notiflist.insert("end", self.name)
-
-                    #else:
-
-                    self.clientlist.insert("end", self.name) #append client names to listbox
-
-                    print(f"Name is {self.name}")
-
-                    #print (f"Address is {self.addr}")
-
-                    for y in self.clients:
-
-                        print (f"Address is {y}")
-
-                    #print (f"Address is {self.addr[0]}")
-
-                    # broadcast message
-                    #broadcastMessage(f"{name} has joined the chat!".encode(FORMAT))
-
-                    #self.conn.send('Connection successful!'.encode(self.FORMAT))
-
-                    # Start the handling thread
-                    #self.thread = threading.Thread(target = self.handle, args = (self.conn, self.addr))
-                    #self.thread.start()
-
-                    # no. of clients connected
-                    # to the server
-                    #print(f"active connections {threading.activeCount()-1}")
-
-                #else:
-
-                    #return  
-
-        except:
-
-            pass 
-
-    def checksignal(self, x):
-
-        return x    
-        
 
     def leavewindow(self):
 
-        self.checksignal(1)
-
-        self.server.close()
-
-        #print (self.z)
+        serv.setFlag(1)
 
         self.thread.join()
         
-        #self.process.close()
-
         print("Thread closed")
-
-        
 
         self.master2.destroy()
         
-        #subprocess.call([sys.executable, "mainmenu.py"])
         g.deiconify()
-        #mainmenu.master.deiconify()
+        
 
 
     def makelobbycode(self):
 
         global lobbycode
 
-        lobbycode = random.choices(string.ascii_letters + string.digits, k = 5)
+        temp = random.choices(string.ascii_letters + string.digits, k = 5)
 
-        lobbycode = [str(x) for x in lobbycode]
+        temp = [str(x) for x in temp]
 
-        self.msg = ''.join(lobbycode)
+        lobbycode = ''.join(temp)
 
-        messagebox.showinfo("New Lobby Code!", "Your lobby code is: " + self.msg)
+        messagebox.showinfo("New Lobby Code!", "Your lobby code is: " + lobbycode)
 
-        self.lnumber.configure(text = self.msg) 
+        self.lnumber.configure(text = "# " + lobbycode)
+
+        serv.revhostcode(lobbycode) 
 
 
 class GUI3(cust.CTk): #initializes client GUI
