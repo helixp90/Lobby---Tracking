@@ -1,5 +1,5 @@
 import tkinter as tk
-import server as serv
+#import server as serv
 
 import random
 import string
@@ -8,6 +8,7 @@ import socket
 from tkinter import messagebox
 
 from threading import Thread
+from threading import Event
 
 import traceback
 import customtkinter as cust
@@ -78,6 +79,28 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
 
             self.exit = cust.CTkButton(self.masterframe2, text = "Exit", fg_color = "Red", text_color = "White", hover_color = "Maroon", command = exit)
             self.exit.pack(side = cust.BOTTOM, pady = 5, padx = 5)
+
+            
+
+        def initserver(self):
+
+            self.PORT = 5000
+        
+            self.SERVER = "localhost" #exact server address if multiple computers; use "localhost" if server is within the same computer for testing purposes
+            self.ADDRESS = (self.SERVER, self.PORT)
+            self.FORMAT = "utf-8"
+
+            self.host = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+            try:
+                
+                self.host.connect(self.ADDRESS)
+
+            except:
+
+                messagebox.showwarning("Server down!", "Server is currently down. Creating and/or joining lobbies might not work.")
+
+                print (traceback.format_exc()) 
 
 
         def packcreateframe(self): 
@@ -150,14 +173,16 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
 
             else:
 
-                serv.revlobbyname(self.enterlname.get())
+                self.initserver()
+
+                self.host.send(("CL:" + self.enterlname.get()).encode(self.FORMAT))
 
                 self.enterlname.delete(0, cust.END)
                 self.enterlname.focus_set()
 
                 self.withdraw()
                 
-                self.h = GUI2()
+                self.h = GUI2(self.PORT, self.SERVER, self.ADDRESS, self.FORMAT, self.host)
                 
 
         def joinlobby(self): #hides main menu window and initializes client GUI
@@ -170,10 +195,12 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
             else:
 
                 x = serv.givhostcode()
+
+                print (x)
                 
                 try: 
 
-                    if x == "" or x.isspace(): #check if lobbycode is empty or whitespace only; either denotes lobby doesn't exist or was termintated
+                    if x == "" or str(x).isspace(): #check if lobbycode is empty or whitespace only; either denotes lobby doesn't exist or was termintated
 
                         messagebox.showerror("Lobby offline!", "The lobby you're trying to connect to may be inactive.")
 
@@ -197,9 +224,18 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
 
 class GUI2(cust.CTk): #admin/host UI
 
-    def __init__(self):
+    def __init__(self, a, b, c, d, e):
 
         #global lobbycode
+
+        self.PORT = a
+        self.SERVER = b
+        self.ADDRESS = c
+        self.FORMAT = d
+        #self.FORMAT = "utf-8"
+        self.host = e
+
+        #self.host = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
         self.master2 = cust.CTkToplevel()
@@ -313,11 +349,11 @@ class GUI2(cust.CTk): #admin/host UI
         self.notiflist = tk.Listbox(self.frame_right)
         self.notiflist.grid(row = 1, column = 0, sticky = "nswe", columnspan = 1, rowspan = 2, pady = 10, padx = 10)
 
-        #messagebox.showinfo("Your Lobby Code!", "Your lobby code is: " + lobbycode)
-
         self.makelobbycode()
 
+        #self.initserver()
 
+        
         print("Before INITSERVER")
 
         print ("After INITSERVER")
@@ -325,29 +361,10 @@ class GUI2(cust.CTk): #admin/host UI
 
         #self.master2.resizable(False, False)
 
-        self.thread = Thread(target = serv.startChat)
-
         print ("After Thread INITIALIZATION")
-
-        self.thread.start()
 
         print ("After Thread start")
 
-
-    def initserver(self):
-
-        self.PORT = 5000
-    
-        self.SERVER = "192.168.0.19" #exact server address; may need to be changed depending on the computer
-
-        self.ADDRESS = (self.SERVER, self.PORT)
-
-        self.FORMAT = "utf-8"
-
-        self.host = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        self.host.connect(self.ADDRESS)
-    
 
     def startstream(self):
 
@@ -397,11 +414,11 @@ class GUI2(cust.CTk): #admin/host UI
 
     def leavewindow(self):
 
-        serv.setFlag(1)
-
-        self.thread.join()
+        self.host.send(("OFF").encode(self.FORMAT))
         
-        print("Thread closed")
+        #print("Thread closed")
+
+        self.host.close()
 
         self.master2.destroy()
         
@@ -423,7 +440,11 @@ class GUI2(cust.CTk): #admin/host UI
 
         self.lnumber.configure(text = "# " + lobbycode)
 
-        serv.revhostcode(lobbycode) 
+        #self.host.send(("CL:" + self.enterlname.get()).encode(self.FORMAT))
+
+        self.host.send(("GCODE:" + lobbycode).encode(self.FORMAT)) 
+
+        print (lobbycode)
 
 
 class GUI3(cust.CTk): #initializes client GUI

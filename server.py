@@ -26,129 +26,157 @@ lobbyname = ""
 lobbycode = ""
 hostlcode = ""
 
-flag = False
+class INITSERVER():
 
-PORT = 5000
-        
-SERVER = socket.gethostbyname(socket.gethostname())
+    def __init__(self):
 
-ADDRESS = (SERVER, PORT)
+        self.flag = threading.Event()
 
-FORMAT = "utf-8"
+        self.PORT = 5000    
+        #self.SERVER = socket.gethostbyname(socket.gethostname()) #use for multiple computers
+        self.SERVER = "localhost" #use this for testing purposes within the same computer; caveat is server only displays results for one terminal not multiple 
+        self.ADDRESS = (self.SERVER, self.PORT)
+        self.FORMAT = "utf-8"
 
-clients, names = [], []
+        self.clients, self.names = [], []
 
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.bind(self.ADDRESS)
 
-server.bind(ADDRESS)
+        self.host = ""
 
+        self.t = Thread(target = self.startChat)
+        self.t.start()
 
-def revlobbyname(a):
+    def terminate(self):
 
-    global lobbyname
+        self.flag.set()
 
-    lobbyname = a
+    def commence(self):
 
-def givlobbyname():
-
-    #global lobbyname
-
-    return lobbyname
-
-
-def revhostcode(a):
-
-    global hostlcode
-
-    hostlcode = a
-
-def givhostcode():
-
-    return hostlcode
-
-def setFlag(a):
-
-    global flag
-
-    if a == 0:
-
-        flag = False
-
-    else:
-
-        flag = True
+        self.flag.clear()    
 
 
-def startChat():
+    def revlobbyname(a):
 
-    print("server is working on " + SERVER)
+        global lobbyname
 
-    # listening for connections
-    server.listen(30)
+        lobbyname = a
 
-    try:
+    def givlobbyname():
 
-        while True:
+        #global lobbyname
 
-            global flag
+        return lobbyname
 
-            if flag:
 
-                break
+    def revhostcode(a):
 
-            else:
+        global hostlcode
 
-                # accept connections and returns
-                # a new connection to the client
-                #  and  the address bound to it
-                conn, addr = server.accept()
-                #self.conn.send("NAME".encode(FORMAT))
+        hostlcode = a
 
-                # 1024 represents the max amount
-                # of data that can be received (bytes)
-                name = conn.recv(1024).decode(FORMAT)
+    def givhostcode():
 
-                # append the name and client
-                # to the respective list
+        return hostlcode
 
-                #self.names.append(self.name)
-                clients.append(conn)
 
-                #if "sleep" in self.name or "awake" in self.name:
+    def startChat(self):
 
-                    #self.notiflist.insert("end", self.name)
+        print("server is working on " + self.SERVER)
 
-                #else:
+        self.server.listen(30)
 
-                #self.clientlist.insert("end", self.name) #append client names to listbox
+        #self.server.settimeout(0.005) # time out after 5 ms.
 
-                #print(f"Name is {self.name}")
+        try:
 
-                #print (f"Address is {self.addr}")
+            while True: 
 
-                for y in clients:
+                self.conn, self.addr = self.server.accept()
 
-                    print (f"Address is {y}")
+                print ("Connection accepted")
 
-                #print (f"Address is {self.addr[0]}")
+                #self.conn.settimeout(0.005) # time out after 5 ms.
 
-                # broadcast message
-                #broadcastMessage(f"{name} has joined the chat!".encode(FORMAT))
+                self.msg = self.conn.recv(1024).decode(self.FORMAT)
 
-                #self.conn.send('Connection successful!'.encode(self.FORMAT))
+                print (self.msg)
+                print (str(self.host) + "LMAO")
 
-                # Start the handling thread
-                #self.thread = threading.Thread(target = self.handle, args = (self.conn, self.addr))
-                #self.thread.start()
+                if "CL:" in self.msg:
 
-                # no. of clients connected
-                # to the server
-                #print(f"active connections {threading.activeCount()-1}")
+                    if self.host != "" or self.host.isspace():
 
-            #else:
+                        messagebox.showwarning("Lobby Exists!", "Host has already created a lobby!")
 
-                #return  
+                    else:
 
-    except:
+                        self.host = self.conn
 
-        print (traceback.format_exc())
+                        self.lobbyname = self.msg.replace("CL:", "")
+
+                        print (self.lobbyname)
+
+                        self.t2 = Thread(target = self.startHost)
+                        self.t2.start()
+                        
+                        print("Thread started")
+
+                        self.t2.join()
+
+                        print("Thread stopped")
+
+                #self.clients.append(self.conn)
+
+        except:
+
+            print (traceback.format_exc())
+
+    def startHost(self):
+
+        try:
+
+            while True:
+
+                print ("Connection resumed")
+
+                
+
+                self.msg2 = self.host.recv(1024).decode(self.FORMAT)
+
+                if "GCODE:" in self.msg2:
+
+                    self.lobbycode = self.msg2.replace("GCODE:", "")
+
+                    print (self.lobbycode)
+
+                elif "CL:" in self.msg2:
+
+                    self.lobbyname = self.msg2.replace("CL:", "")
+
+                    print (self.lobbyname)
+
+                else:
+
+                    #self.host.close()
+                    
+                    self.host.shutdown(socket.SHUT_RDWR)
+
+                    self.host = ""
+
+                    #self.server.close(self.host)
+
+                    return
+
+        except:
+
+            print (traceback.format_exc())
+            pass
+
+
+
+
+i = INITSERVER()
+
+
