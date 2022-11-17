@@ -34,7 +34,7 @@ class INITSERVER():
 
         self.PORT = 5000    
         #self.SERVER = socket.gethostbyname(socket.gethostname()) #use for multiple computers
-        self.SERVER = "localhost" #use this for testing purposes within the same computer; caveat is server only displays results for one terminal not multiple 
+        self.SERVER = "192.168.0.19" #use this for testing purposes within the same computer; caveat is server only displays results for one terminal not multiple 
         self.ADDRESS = (self.SERVER, self.PORT)
         self.FORMAT = "utf-8"
 
@@ -123,9 +123,17 @@ class INITSERVER():
                         
                         print("Thread started")
 
-                        self.t2.join()
+                        #self.t2.join()
 
                         print("Thread stopped")
+
+                elif "RCODE:" in self.msg:
+                    
+                    print ("HOPE THIS WORKS")
+
+                    self.conn.send((self.lobbycode).encode(self.FORMAT))
+
+                    print (self.lobbycode)
 
                 #self.clients.append(self.conn)
 

@@ -1,5 +1,6 @@
 import tkinter as tk
 #import server as serv
+from tkinter import ttk
 
 import random
 import string
@@ -86,7 +87,9 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
 
             self.PORT = 5000
         
-            self.SERVER = "localhost" #exact server address if multiple computers; use "localhost" if server is within the same computer for testing purposes
+            #self.SERVER = "localhost" #exact server address if multiple computers; use "localhost" if server is within the same computer for testing purposes
+
+            self.SERVER = "192.168.0.19"
             self.ADDRESS = (self.SERVER, self.PORT)
             self.FORMAT = "utf-8"
 
@@ -194,19 +197,31 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
 
             else:
 
-                x = serv.givhostcode()
+                self.initserver()
 
-                print (x)
+                print ("I AM HERE")
+
+                x = self.enterlcode.get()
                 
                 try: 
 
-                    if x == "" or str(x).isspace(): #check if lobbycode is empty or whitespace only; either denotes lobby doesn't exist or was termintated
+                    print ("BEFORE SENDING")
+
+                    self.host.send(("RCODE:").encode(self.FORMAT))
+
+                    self.lobbycode = self.host.recv(1024).decode(self.FORMAT)
+
+                    print("AFTER RECEIVING")
+
+                    print (self.lobbycode + "LMAO")
+
+                    if x == "" or x.isspace(): #check if lobbycode is empty or whitespace only; either denotes lobby doesn't exist or was termintated
 
                         messagebox.showerror("Lobby offline!", "The lobby you're trying to connect to may be inactive.")
 
                     else:
                     
-                        if self.enterlcode.get() == serv.givhostcode():
+                        if x == self.lobbycode:
 
                             self.withdraw()
                             
