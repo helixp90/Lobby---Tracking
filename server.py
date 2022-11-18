@@ -135,6 +135,11 @@ class INITSERVER():
 
                     print (self.lobbycode)
 
+                    self.client = self.conn
+
+                    self.t3 = Thread(target = self.startClient)
+                    self.t3.start()
+
                 #self.clients.append(self.conn)
 
         except:
@@ -182,6 +187,32 @@ class INITSERVER():
             print (traceback.format_exc())
             pass
 
+    def startClient(self):
+
+        try:
+
+            while True:
+
+                self.msg3 = self.client.recv(1024).decode(self.FORMAT)
+
+                if "CLIENT:" in self.msg3:
+
+                    self.clients.append(self.client)
+
+                    self.client.send((self.lobbyname).encode(self.FORMAT))
+
+                elif "NAME:" in self.msg3:
+
+                    self.clientname = self.msg3.replace("NAME:", "")
+
+                    print (self.clientname)
+
+                    self.host.send(("NAME:" + self.clientname).encode(self.FORMAT))
+
+        except:
+
+            print (traceback.format_exc())
+            pass
 
 
 

@@ -1,6 +1,6 @@
 import tkinter as tk
 #import server as serv
-from tkinter import ttk
+from tkinter import ttk as tick
 
 import random
 import string
@@ -202,6 +202,7 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
                 print ("I AM HERE")
 
                 x = self.enterlcode.get()
+                y = self.entergname.get()
                 
                 try: 
 
@@ -223,9 +224,11 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
                     
                         if x == self.lobbycode:
 
+                            self.host.send(("CLIENT:").encode(self.FORMAT))
+
                             self.withdraw()
                             
-                            self.j = GUI3()
+                            self.j = GUI3(self.PORT, self.SERVER, self.ADDRESS, self.FORMAT, self.host, y)
 
                         else:
 
@@ -309,42 +312,61 @@ class GUI2(cust.CTk): #admin/host UI
 
         self.bigframe.grid_rowconfigure(0, weight = 1)
         self.bigframe.grid_rowconfigure(1, weight = 1)
-        self.bigframe.grid_rowconfigure(2, weight = 1)
+        #self.bigframe.grid_rowconfigure(2, weight = 1)
 
         self.bigframe.grid_columnconfigure(0, weight = 1)
-        self.bigframe.grid_columnconfigure(1, weight = 1)
-        self.bigframe.grid_columnconfigure(2, weight = 1)
-        self.bigframe.grid_columnconfigure(3, weight = 1)
-        self.bigframe.grid_columnconfigure(4, weight = 1)
+        #self.bigframe.grid_columnconfigure(1, weight = 1)
+        #self.bigframe.grid_columnconfigure(2, weight = 1)
+        #self.bigframe.grid_columnconfigure(3, weight = 1)
+        #self.bigframe.grid_columnconfigure(4, weight = 1)
 
         
         self.nameframe = cust.CTkFrame(self.bigframe, border_color = "Blue")
         self.nameframe.grid(row = 0, column = 0, sticky = "nsew")
 
+        self.nameframe.grid_rowconfigure(0, weight = 1)
+
+        self.nameframe.grid_columnconfigure(0, weight = 1)
+        self.nameframe.grid_columnconfigure(1, weight = 1)
+        self.nameframe.grid_columnconfigure(2, weight = 1)
+
         self.lname = cust.CTkLabel(self.nameframe, text = "Name", text_font = ("Times New Roman", 10), fg = "Blue")
         self.lname.grid(row = 0, column = 0, sticky = "nsew")
 
 
-        self.statusframe = cust.CTkFrame(self.bigframe, border_color = "Blue")
-        self.statusframe.grid(row = 0, column = 2, sticky = "nsew")
+        #self.statusframe = cust.CTkFrame(self.bigframe, border_color = "Blue")
+        #self.statusframe.grid(row = 0, column = 2, sticky = "nsew")
 
-        self.lstatus = cust.CTkLabel(self.statusframe, text = "Status", text_font = ("Times New Roman", 10), fg = "Black")
-        self.lstatus.grid(row = 0, column = 0, sticky = "nsew")
+        self.lstatus = cust.CTkLabel(self.nameframe, text = "Status", text_font = ("Times New Roman", 10), fg = "Black")
+        self.lstatus.grid(row = 0, column = 1, sticky = "nsew")
 
 
-        self.idframe = cust.CTkFrame(self.bigframe, border_color = "Blue", corner_radius = 0)
-        self.idframe.grid(row = 0, column = 4, sticky = "nsew")
+        #self.idframe = cust.CTkFrame(self.bigframe, border_color = "Blue", corner_radius = 0)
+        #self.idframe.grid(row = 0, column = 4, sticky = "nsew")
 
-        self.lid = cust.CTkLabel(self.idframe, text = "Active/Inactivity", text_font = ("Times New Roman", 10), fg = "Black")
-        self.lid.grid(row = 0, column = 0, sticky = "nsew")
+        self.lid = cust.CTkLabel(self.nameframe, text = "Active/Inactivity", text_font = ("Times New Roman", 10), fg = "Black")
+        self.lid.grid(row = 0, column = 2, sticky = "nsew")
 
 
         self.clientframe = cust.CTkFrame(self.bigframe, corner_radius = 0, border_color = "Blue")
-        self.clientframe.grid(row = 2, column = 0, sticky= "nswe", columnspan = 1, rowspan = 2, pady = 10, padx = 10)
+        self.clientframe.grid(row = 1, column = 0, sticky= "nswe")
+
+        self.clientframe.pack_propagate(False)
 
 
-        self.clientlist = tk.Listbox(self.clientframe)
-        self.clientlist.grid(row = 0, column = 0, sticky= "nswe")
+        self.columns = ("name", "status", "activity")
+
+        self.clientlist = tick.Treeview(self.clientframe, columns = self.columns, show = "tree")
+        self.clientlist.grid(row = 0, column = 0, sticky = "nswe")
+
+        self.clientlist.column("#0", minwidth = 0, width = 10, stretch = False)
+
+        self.clientlist.column("name", minwidth = 0, width = 140, stretch = False)
+        self.clientlist.column("status", minwidth = 0, width = 140, stretch = False)
+        self.clientlist.column("activity", minwidth = 0, width = 140, stretch = False)
+
+        #self.clientlist = tk.Listbox(self.clientframe)
+        #self.clientlist.grid(row = 0, column = 0, sticky= "nswe")
 
         # ============ frame_right ============
 
@@ -373,6 +395,8 @@ class GUI2(cust.CTk): #admin/host UI
 
         print ("After INITSERVER")
        
+        self.thread = Thread(target = self.initreceiver)
+        self.thread.start()
 
         #self.master2.resizable(False, False)
 
@@ -380,13 +404,33 @@ class GUI2(cust.CTk): #admin/host UI
 
         print ("After Thread start")
 
+    def initreceiver(self):
+
+        try:
+
+            while True:
+                
+                #self.host.settimeout(0.005)
+
+                self.message = self.host.recv(1024).decode(self.FORMAT)
+
+                print (self.message)
+
+                if "NAME:" in self.message:
+
+                    self.clientlist.insert("", cust.END, values = self.message.replace("NAME:", ""))
+
+        except Exception:
+
+            print (traceback.format_exc())
+            
+
 
     def startstream(self):
 
-        
         try:
 
-                print (str(self.master2.winfo_width()) + " x " + str(self.master2.winfo_height()))
+                #print (str(self.master2.winfo_width()) + " x " + str(self.master2.winfo_height()))
 
             #while True:
 
@@ -464,7 +508,16 @@ class GUI2(cust.CTk): #admin/host UI
 
 class GUI3(cust.CTk): #initializes client GUI
 
-    def __init__(self):
+    def __init__(self, a, b, c, d, e, f):
+
+        self.PORT = a
+        self.SERVER = b
+        self.ADDRESS = c
+        self.FORMAT = d
+        
+        self.client = e
+
+        self.clientname = f
 
         super().__init__()
 
@@ -519,7 +572,7 @@ class GUI3(cust.CTk): #initializes client GUI
         
 
 
-        self.bigframe = cust.CTkFrame(self.frame_left, border_color = "Black", corner_radius = 0)
+        self.bigframe = cust.CTkFrame(self.frame_left, highlightbackground = "Black", highlightthickness = 2, corner_radius = 0)
         self.bigframe.grid(row = 3, column = 0, sticky = "nswe", padx = 50, pady = 50)
 
         self.lname = cust.CTkLabel(self.bigframe, text = "Watching you", text_font = ("Times New Roman", 15), fg = "Blue")
@@ -545,32 +598,26 @@ class GUI3(cust.CTk): #initializes client GUI
         self.notiflist = tk.Listbox(self.frame_right)
         self.notiflist.grid(row = 1, column = 0, sticky = "nswe")
 
-        self.PORT = 5000
-        
-        self.SERVER = "192.168.0.19" #exact server address; may need to be changed depending on the computer
-        self.ADDRESS = (self.SERVER, self.PORT)
-        self.FORMAT = "utf-8"
+        self.initmessages()
 
-        self.client = socket.socket(socket.AF_INET,
-                       socket.SOCK_STREAM)
+        #self.name = g.entergname.get()
 
-        self.client.connect(self.ADDRESS)
+        #self.client.send(self.name.encode(self.FORMAT)) #sends client's name to server
 
-        self.name = g.entergname.get()
+        #self.vs = VideoStream(src = 0).start()
 
-        self.client.send(self.name.encode(self.FORMAT)) #sends client's name to server
+        #self.rev = Thread(target = self.startstream2)
 
-        self.vs = VideoStream(src = 0).start()
-
-        self.rev = Thread(target = self.startstream2)
-
-        self.rev.start()
+        #self.rev.start()
 
         #self.rev.join()
 
         #self.i = INITCLIENT()
 
-    
+    def initmessages(self):
+
+        self.client.send(("NAME:" + self.clientname).encode(self.FORMAT))
+
 
     def leavewindow(self):
 
