@@ -185,7 +185,7 @@ class INITSERVER():
         except:
 
             print (traceback.format_exc())
-            pass
+            
 
     def startClient(self):
 
@@ -199,7 +199,7 @@ class INITSERVER():
 
                     self.clients.append(self.client)
 
-                    self.client.send((self.lobbyname).encode(self.FORMAT))
+                    self.client.send(("CLIENT:" + self.lobbyname).encode(self.FORMAT))
 
                 elif "NAME:" in self.msg3:
 
@@ -209,12 +209,13 @@ class INITSERVER():
 
                     self.host.send(("NAME:" + self.clientname).encode(self.FORMAT))
 
+                elif "END:" in self.msg3:
+
+                    self.host.send((self.msg3).encode(self.FORMAT))
+
         except:
 
             print (traceback.format_exc())
-            pass
-
-
 
 i = INITSERVER()
 

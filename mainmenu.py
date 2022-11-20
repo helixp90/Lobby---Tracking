@@ -420,6 +420,10 @@ class GUI2(cust.CTk): #admin/host UI
 
                     self.clientlist.insert("", cust.END, values = self.message.replace("NAME:", ""))
 
+                elif "END:" in self.message:
+
+                    messagebox.showinfo("Client Disconnected!", self.message.replace("END:", "") + "has left the server.")
+
         except Exception:
 
             print (traceback.format_exc())
@@ -546,34 +550,48 @@ class GUI3(cust.CTk): #initializes client GUI
 
         self.frame_left.grid_rowconfigure(0, weight = 1)
         self.frame_left.grid_rowconfigure(1, weight = 1)
-        self.frame_left.grid_rowconfigure(2, weight = 1)
-        self.frame_left.grid_rowconfigure(3, weight = 1, minsize = 50)
+        #self.frame_left.grid_rowconfigure(2, weight = 1)
+        #self.frame_left.grid_rowconfigure(3, weight = 1, minsize = 50)
 
         self.frame_left.grid_columnconfigure(0, weight = 1)
-        self.frame_left.grid_columnconfigure(1, weight = 1)
-        self.frame_left.grid_columnconfigure(2, weight = 1)
+        #self.frame_left.grid_columnconfigure(1, weight = 1)
+        #self.frame_left.grid_columnconfigure(2, weight = 1)
+
+        self.frame_up = cust.CTkFrame(self.frame_left, corner_radius = 0)
+        self.frame_up.grid(row = 0, column = 0, sticky = "nswe")
+
+        self.frame_down = cust.CTkFrame(self.frame_left, corner_radius = 0)
+        self.frame_down.grid(row = 1, column = 0, sticky = "nswe")
+
+
+         # ============ frame_up ============
+
+
+        self.frame_up.grid_rowconfigure(0, weight = 1)
+        self.frame_up.grid_rowconfigure(1, weight = 1)
+        
+        self.frame_up.grid_columnconfigure(0, weight = 1)
+        self.frame_up.grid_columnconfigure(1, weight = 1)
+        self.frame_up.grid_columnconfigure(2, weight = 1)
 
 
 
-        self.leave = cust.CTkButton(self.frame_left, text = "Leave", fg_color = "Red", text_color = "White", hover_color = "Maroon", command = lambda: self.leavewindow())
+        self.leave = cust.CTkButton(self.frame_up, text = "Leave", fg_color = "Red", text_color = "White", hover_color = "Maroon", command = lambda: self.leavewindow())
         self.leave.grid(row = 0, column = 0, sticky = "n")
 
-        self.ecdlabel = cust.CTkLabel(self.frame_left, text = "Sleeping Detection Status", text_font = ("Times New Roman", 15), fg = "Black")
+        self.ecdlabel = cust.CTkLabel(self.frame_up, text = "Sleeping Detection Status", text_font = ("Times New Roman", 15), fg = "Black")
         self.ecdlabel.grid(row = 0, column = 2, sticky = "nswe")
 
 
-        self.lnameframe = cust.CTkFrame(self.frame_left, corner_radius = 0, border_color = "Black", bg_color = "White")
+        self.lnameframe = cust.CTkFrame(self.frame_up, corner_radius = 0, border_color = "Black", highlightcolor = "White", highlightthickness = 2)
         self.lnameframe.grid(row = 1, column = 1, sticky = "nswe")
 
-        self.lname = cust.CTkLabel(self.lnameframe, text = "+", text_font = ("Times New Roman", 15), fg = "Black")
+        self.lname = cust.CTkLabel(self.lnameframe, text = "Lobby Name", text_font = ("Times New Roman", 15), fg = "Black")
         self.lname.grid(row = 0, column = 0, sticky = "nswe")
 
 
-        
-
-
-        self.bigframe = cust.CTkFrame(self.frame_left, highlightbackground = "Black", highlightthickness = 2, corner_radius = 0)
-        self.bigframe.grid(row = 3, column = 0, sticky = "nswe", padx = 50, pady = 50)
+        self.bigframe = cust.CTkFrame(self.frame_down, highlightbackground = "Black", highlightthickness = 2, corner_radius = 0)
+        self.bigframe.grid(row = 1, column = 0, sticky = "nswe", padx = 50, pady = 50)
 
         self.lname = cust.CTkLabel(self.bigframe, text = "Watching you", text_font = ("Times New Roman", 15), fg = "Blue")
         self.lname.grid(row = 0, column = 0, sticky = "nswe")
@@ -614,12 +632,38 @@ class GUI3(cust.CTk): #initializes client GUI
 
         #self.i = INITCLIENT()
 
+        self.thread = Thread(target = self.initreceiver)
+        self.thread.start()
+
+
+    def initreceiver(self):
+
+        try:
+
+            while True:
+                
+                #self.host.settimeout(0.005)
+
+                self.message = self.client.recv(1024).decode(self.FORMAT)
+
+                print (self.message)
+
+                if "CLIENT:" in self.message:
+
+                    self.lname.configure(text = self.message.replace("CLIENT:", "") + "'s Lobby")
+
+        except Exception:
+
+            print (traceback.format_exc())
+
     def initmessages(self):
 
         self.client.send(("NAME:" + self.clientname).encode(self.FORMAT))
 
 
     def leavewindow(self):
+
+        self.client.send(("END:" + self.clientname).encode(self.FORMAT))
 
         self.client.close()
 
