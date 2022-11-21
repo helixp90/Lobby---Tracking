@@ -422,7 +422,13 @@ class GUI2(cust.CTk): #admin/host UI
 
                 elif "END:" in self.message:
 
-                    messagebox.showinfo("Client Disconnected!", self.message.replace("END:", "") + "has left the server.")
+                    messagebox.showinfo("Client Disconnected!", self.message.replace("END:", "") + " has left the server.")
+
+                elif self.message == "NO CLIENTS:":
+
+                    messagebox.showerror("No Connections!", "No clients connected to host!")
+
+                    self.ecdpower.configure(text = "Off", fg_color = "Red")
 
         except Exception:
 
@@ -434,39 +440,21 @@ class GUI2(cust.CTk): #admin/host UI
 
         try:
 
-                #print (str(self.master2.winfo_width()) + " x " + str(self.master2.winfo_height()))
+            if self.ecdpower.text == "Off":
 
-            #while True:
+                self.ecdpower.configure(text = "On", fg_color = "Green")
 
-                if not self.clients:
+                self.host.send(("ON:").encode(self.FORMAT))
 
-                    messagebox.showerror("No Connections!", "No clients connected to host!")
+                print ("On sent")
 
-                else:
+            else:
+                
+                self.ecdpower.configure(text = "Off", fg_color = "Red")
 
-                    for x in self.clients:
+                self.host.send(("OFF:").encode(self.FORMAT))
 
-                        if self.ecdpower.text == "Off":
-
-                            self.ecdpower.configure(text = "On", fg_color = "Green")
-
-                            x.send(("On").encode(self.FORMAT))
-
-                            print ("On sent")
-
-                            
-
-                            self.message = self.conn.recv(1024).decode(self.FORMAT)
-
-                            self.notiflist.insert("end", self.message)
-
-                        else:
-                            
-                            self.ecdpower.configure(text = "Off", fg_color = "Red")
-
-                            x.send(("Off").encode(self.FORMAT))
-
-                            print ("Off sent")
+                print ("Off sent")
 
         except:
 
@@ -522,6 +510,8 @@ class GUI3(cust.CTk): #initializes client GUI
         self.client = e
 
         self.clientname = f
+
+        self.flag = Event()
 
         super().__init__()
 
@@ -593,8 +583,8 @@ class GUI3(cust.CTk): #initializes client GUI
         self.bigframe = cust.CTkFrame(self.frame_down, highlightbackground = "Black", highlightthickness = 2, corner_radius = 0)
         self.bigframe.grid(row = 1, column = 0, sticky = "nswe", padx = 50, pady = 50)
 
-        self.lname = cust.CTkLabel(self.bigframe, text = "Watching you", text_font = ("Times New Roman", 15), fg = "Blue")
-        self.lname.grid(row = 0, column = 0, sticky = "nswe")
+        self.lname2 = cust.CTkLabel(self.bigframe, text = "Watching you", text_font = ("Times New Roman", 15), fg = "Blue")
+        self.lname2.grid(row = 0, column = 0, sticky = "nswe")
 
 
         self.frame_right.grid_rowconfigure(0, weight = 1)
@@ -616,19 +606,11 @@ class GUI3(cust.CTk): #initializes client GUI
         self.notiflist = tk.Listbox(self.frame_right)
         self.notiflist.grid(row = 1, column = 0, sticky = "nswe")
 
-        self.initmessages()
 
-        #self.name = g.entergname.get()
+        self.client.send(("NAME:" + self.clientname).encode(self.FORMAT))
 
-        #self.client.send(self.name.encode(self.FORMAT)) #sends client's name to server
-
-        #self.vs = VideoStream(src = 0).start()
-
-        #self.rev = Thread(target = self.startstream2)
-
-        #self.rev.start()
-
-        #self.rev.join()
+        
+        self.vs = VideoStream(src = 0)
 
         #self.i = INITCLIENT()
 
@@ -652,14 +634,24 @@ class GUI3(cust.CTk): #initializes client GUI
 
                     self.lname.configure(text = self.message.replace("CLIENT:", "") + "'s Lobby")
 
+                elif self.message == "ON:":
+
+                    self.rev = Thread(target = self.startstream2)
+                    self.rev.start()
+
+                elif self.message == "OFF:":
+
+                    self.flag.set()
+
+                    self.rev.join()
+
+                    self.flag.clear()
+
+
+
         except Exception:
 
             print (traceback.format_exc())
-
-    def initmessages(self):
-
-        self.client.send(("NAME:" + self.clientname).encode(self.FORMAT))
-
 
     def leavewindow(self):
 
@@ -689,55 +681,37 @@ class GUI3(cust.CTk): #initializes client GUI
 
     def startstream2(self):
 
-        global message
-
-        #self.vs.start()
 
         try:
 
-            #while True:
+            self.result = ""
 
-                print("inside while")
+            self.vs.start()
 
-                message = self.client.recv(1024).decode(self.FORMAT)
+            print ("INSIDE FOR LOOP THE: " + self.SERVER)
 
-                if message == "On":
+            EYE_AR_THRESH = 0.35
+            EYE_AR_CONSEC_FRAMES = 3
 
-                    time.sleep(3)
+            # initialize the frame counters and the total number of blinks
+            COUNTER = 0
+            TOTAL = 0
 
-                    self.vs.start()
+            # initialize dlib's face detector (HOG-based) and then create
+            # the facial landmark predictor
+            print("[INFO] loading facial landmark predictor...")
+            detector = dlib.get_frontal_face_detector()
+            predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
-                    print ("INSIDE FOR LOOP THE: " + self.SERVER)
+            # grab the indexes of the facial landmarks for the left and
+            # right eye, respectively
+            (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
+            (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
 
-                    EYE_AR_THRESH = 0.35
-                    EYE_AR_CONSEC_FRAMES = 3
+            while not self.flag.is_set():
 
-                    # initialize the frame counters and the total number of blinks
-                    COUNTER = 0
-                    TOTAL = 0
-
-                    # initialize dlib's face detector (HOG-based) and then create
-                    # the facial landmark predictor
-                    print("[INFO] loading facial landmark predictor...")
-                    detector = dlib.get_frontal_face_detector()
-                    predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
-
-                    # grab the indexes of the facial landmarks for the left and
-                    # right eye, respectively
-                    (lStart, lEnd) = face_utils.FACIAL_LANDMARKS_IDXS["left_eye"]
-                    (rStart, rEnd) = face_utils.FACIAL_LANDMARKS_IDXS["right_eye"]
-
-                    #vs = VideoStream(src=0).start()
-
-                    
-
-                    # vs = VideoStream(usePiCamera=True).start()
-                    #time.sleep(0)
-
-                    # loop over frames from the video stream
                     #while True:
 
-                    print (message)
                     # if this is a file video stream, then we need to check if
                     # there any more frames left in the buffer to process
 
@@ -745,112 +719,122 @@ class GUI3(cust.CTk): #initializes client GUI
                     # it, and convert it to grayscale
                     # channels)
                     frame = self.vs.read()
-                    frame = imutils.resize(frame, width=1080 )
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-                    # detect faces in the grayscale frame
-                    rects = detector(gray, 0)
+                    if frame.size == 0:
 
-                    # loop over the face detections
-                    for rect in rects:
-                        # determine the facial landmarks for the face region, then
-                        # convert the facial landmark (x, y)-coordinates to a NumPy
-                        # array
-                        shape = predictor(gray, rect)
-                        shape = face_utils.shape_to_np(shape)
+                        self.client.send(("NFD:" + self.clientname).encode(self.FORMAT))
 
-                        # extract the left and right eye coordinates, then use the
-                        # coordinates to compute the eye aspect ratio for both eyes
-                        leftEye = shape[lStart:lEnd]
-                        rightEye = shape[rStart:rEnd]
+                        print ("No Face Detected")
 
-                        leftEAR = self.eye_aspect_ratio(leftEye)
-                        rightEAR = self.eye_aspect_ratio(rightEye)
+                        return
 
-                        # average the eye aspect ratio together for both eyes
-                        ear = (leftEAR + rightEAR)
+                    else:
 
-                        # compute the convex hull for the left and right eye, then
-                        # visualize each of the eyes
-                        leftEyeHull = cv2.convexHull(leftEye)
-                        rightEyeHull = cv2.convexHull(rightEye)
-                        cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
-                        cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
+                        frame = imutils.resize(frame, width = 1080 )
+                        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+                        # detect faces in the grayscale frame
+                        rects = detector(gray, 0)
+
+                        # loop over the face detections
+                        for rect in rects:
+                            # determine the facial landmarks for the face region, then
+                            # convert the facial landmark (x, y)-coordinates to a NumPy
+                            # array
+                            shape = predictor(gray, rect)
+                            shape = face_utils.shape_to_np(shape)
+
+                            # extract the left and right eye coordinates, then use the
+                            # coordinates to compute the eye aspect ratio for both eyes
+                            leftEye = shape[lStart:lEnd]
+                            rightEye = shape[rStart:rEnd]
+
+                            leftEAR = self.eye_aspect_ratio(leftEye)
+                            rightEAR = self.eye_aspect_ratio(rightEye)
+
+                            # average the eye aspect ratio together for both eyes
+                            ear = (leftEAR + rightEAR)
+
+                            # compute the convex hull for the left and right eye, then
+                            # visualize each of the eyes
+                            leftEyeHull = cv2.convexHull(leftEye)
+                            rightEyeHull = cv2.convexHull(rightEye)
+                            cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
+                            cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
+
+                            if self.result == "" or self.result.isspace():
+
+                                # check to see if the eye aspect ratio is below the blink
+                                # threshold, and if so, increment the blink frame counter
+                                if ear < EYE_AR_THRESH:
+                                    cv2.putText(frame, "Eye: {}".format("close"), (10, 30),
+                                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                                    cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
+                                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+                                    print ("Eyes closed")
+
+                                    self.notiflist.insert("end", "Host is watching you!")
+
+                                    self.client.send(("SLEEPING:" + self.clientname).encode(self.FORMAT))
+
+                                    #self.vs.stop()
+
+                                    #self.master3.after(1000, self.startstream2)
 
 
-                        # check to see if the eye aspect ratio is below the blink
-                        # threshold, and if so, increment the blink frame counter
-                        if ear < EYE_AR_THRESH:
-                            cv2.putText(frame, "Eye: {}".format("close"), (10, 30),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                            cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                                    # otherwise, the eye aspect ratio is not below the blink
+                                    # threshold
+                                else:
+                                    cv2.putText(frame, "Eye: {}".format("Open"), (10, 30),
+                                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                                    cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
+                                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-                            print ("Eyes closed")
+                                    print ("Eyes open")
 
-                            self.notiflist.insert("end", "Host is watching you!")
+                                    self.notiflist.insert("end", "Thank you for keeping attention")
 
-                            self.client.send((self.name + " is sleeping!!").encode(self.FORMAT))
+                                    self.client.send(("AWAKE:" + self.clientname).encode(self.FORMAT))
 
-                            self.vs.stop()
+                                    #self.notiflist.delete(0, tk.END)
 
-                            self.master3.after(1000, self.startstream2)
+                                    #self.vs.stop()
 
+                                    #self.master3.after(1000, self.startstream2)
 
-                            # otherwise, the eye aspect ratio is not below the blink
-                            # threshold
-                        else:
-                            cv2.putText(frame, "Eye: {}".format("Open"), (10, 30),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                            cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                            # draw the total number of blinks on the frame along with
+                            # the computed eye aspect ratio for the frame
 
-                            print ("Eyes open")
+                            # show the frame
+                            #cv2.imshow("Eye Close Detection Using EAR", frame)
+                            #key = cv2.waitKey(1) & 0xFF
 
-                            self.notiflist.insert("end", "Thank you for keeping attention")
-
-                            self.client.send((self.name + " is awake!!").encode(self.FORMAT))
-
-                            #self.notiflist.delete(0, tk.END)
-
-                            self.vs.stop()
-
-                            self.master3.after(1000, self.startstream2)
-
-                        # draw the total number of blinks on the frame along with
-                        # the computed eye aspect ratio for the frame
-
-                        # show the frame
-                        #cv2.imshow("Eye Close Detection Using EAR", frame)
-                        #key = cv2.waitKey(1) & 0xFF
-
-                        # if the `q` key was pressed, break from the loop
-                        #if key == ord("q"):
-                            #break
+                            # if the `q` key was pressed, break from the loop
+                            #if key == ord("q"):
+                                #break
 
                     # do a bit of cleanup
                     #cv2.destroyAllWindows()
                     #vs.stop()
-                else:
+            else:
 
-                    print ("Inside destroy")
+                print ("Inside destroy")
 
-                    self.vs.stop()
-                    #cv2.destroyAllWindows()
+                self.vs.stop()
+                #cv2.destroyAllWindows()
 
-                    self.master3.after(1000, self.startstream2)
+                #self.master3.after(1000, self.startstream2)
 
-                    #return
+                return
 
         except Exception as e:
 
-            if e == ConnectionResetError:
+            self.client.send(("NFD:" + self.clientname).encode(self.FORMAT))
 
-                messagebox.showerror("Lobby Closed!", "The host has closed this lobby.")
+            print ("No Face Detected")
 
-            else:
-
-                print (traceback.format_exc())
+            print (traceback.format_exc())
 
 if __name__ == "__main__":
 

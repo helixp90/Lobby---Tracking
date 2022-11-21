@@ -170,6 +170,24 @@ class INITSERVER():
 
                     print (self.lobbyname)
 
+                elif "ON:" in self.msg2:
+
+                    if not self.clients:
+
+                        self.host.send(("NO CLIENTS:").encode(self.FORMAT))
+
+                    else:
+
+                        for x in self.clients:
+
+                            x.send(("ON:").encode(self.FORMAT))
+
+                elif "OFF:" in self.msg2:
+
+                    for x in self.clients:
+
+                            x.send(("OFF:").encode(self.FORMAT))
+
                 else:
 
                     #self.host.close()
