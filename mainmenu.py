@@ -1,5 +1,4 @@
 import tkinter as tk
-#import server as serv
 from tkinter import ttk as tick
 
 import random
@@ -78,8 +77,13 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
             self.back = cust.CTkButton(self.masterframe2, text = "Back", fg_color = "Red", text_color = "White", hover_color = "Maroon", state = "disabled", command = lambda: self.goback())
             self.back.pack(side = cust.BOTTOM, pady=5, padx=5)
 
-            self.exit = cust.CTkButton(self.masterframe2, text = "Exit", fg_color = "Red", text_color = "White", hover_color = "Maroon", command = exit)
+            self.exit = cust.CTkButton(self.masterframe2, text = "Exit", fg_color = "Red", text_color = "White", hover_color = "Maroon", command = lambda: self.turnoff())
             self.exit.pack(side = cust.BOTTOM, pady = 5, padx = 5)
+
+        def turnoff(self):
+
+            self.host.close()
+            self.destroy()
 
             
 
@@ -418,7 +422,11 @@ class GUI2(cust.CTk): #admin/host UI
 
                 if "NAME:" in self.message:
 
-                    self.clientlist.insert("", cust.END, values = self.message.replace("NAME:", ""))
+                    x = self.message.replace("NAME:", "")
+
+                    self.clientlist.insert("", cust.END, iid = x, values = x)
+
+                    print (x)
 
                 elif "END:" in self.message:
 
@@ -429,6 +437,22 @@ class GUI2(cust.CTk): #admin/host UI
                     messagebox.showerror("No Connections!", "No clients connected to host!")
 
                     self.ecdpower.configure(text = "Off", fg_color = "Red")
+
+                elif "CLOSED:" in self.message:
+
+                    x = self.message.replace("CLOSED:", "")
+
+                    self.clientlist.set(x, "status", "Eyes are closed")
+                    self.clientlist.set(x, "activity", "Eyes are closed")
+
+                    #self.clientlist.item()
+
+                elif "AWAKE:" in self.message:
+
+                    x = self.message.replace("AWAKE:", "")
+
+                    self.clientlist.set(x, "status", "Eyes are open")
+                    self.clientlist.set(x, "activity", "Eyes are open")
 
         except Exception:
 
@@ -469,7 +493,7 @@ class GUI2(cust.CTk): #admin/host UI
         
         #print("Thread closed")
 
-        self.host.close()
+        #self.host.close()
 
         self.master2.destroy()
         
@@ -657,7 +681,7 @@ class GUI3(cust.CTk): #initializes client GUI
 
         self.client.send(("END:" + self.clientname).encode(self.FORMAT))
 
-        self.client.close()
+        #self.client.close()
 
         self.master3.destroy()
 
@@ -772,16 +796,13 @@ class GUI3(cust.CTk): #initializes client GUI
                                     cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
                                             cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
+                                    self.result = "CLOSED:"
+
                                     print ("Eyes closed")
 
                                     self.notiflist.insert("end", "Host is watching you!")
 
-                                    self.client.send(("SLEEPING:" + self.clientname).encode(self.FORMAT))
-
-                                    #self.vs.stop()
-
-                                    #self.master3.after(1000, self.startstream2)
-
+                                    self.client.send(("CLOSED:" + self.clientname).encode(self.FORMAT))
 
                                     # otherwise, the eye aspect ratio is not below the blink
                                     # threshold
@@ -793,35 +814,42 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     print ("Eyes open")
 
+                                    self.result = "AWAKE:"
+
                                     self.notiflist.insert("end", "Thank you for keeping attention")
 
                                     self.client.send(("AWAKE:" + self.clientname).encode(self.FORMAT))
 
-                                    #self.notiflist.delete(0, tk.END)
+                            else:
 
-                                    #self.vs.stop()
+                                if ear < EYE_AR_THRESH:
 
-                                    #self.master3.after(1000, self.startstream2)
+                                    self.temp = "CLOSED:"
 
-                            # draw the total number of blinks on the frame along with
-                            # the computed eye aspect ratio for the frame
+                                else:
 
-                            # show the frame
+                                    self.temp = "AWAKE:"
+
+                                if self.temp != self.result:
+
+                                    self.client.send((self.temp + self.clientname).encode(self.FORMAT))
+
+                                    self.result = ""
+
+                                    print ("inside temp stuff")
+
                             #cv2.imshow("Eye Close Detection Using EAR", frame)
-                            #key = cv2.waitKey(1) & 0xFF
 
-                            # if the `q` key was pressed, break from the loop
-                            #if key == ord("q"):
-                                #break
-
-                    # do a bit of cleanup
-                    #cv2.destroyAllWindows()
-                    #vs.stop()
+                            
             else:
 
                 print ("Inside destroy")
 
                 self.vs.stop()
+
+                self.result = ""
+
+                self.flag.clear()
                 #cv2.destroyAllWindows()
 
                 #self.master3.after(1000, self.startstream2)

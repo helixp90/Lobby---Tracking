@@ -227,9 +227,10 @@ class INITSERVER():
 
                     self.host.send(("NAME:" + self.clientname).encode(self.FORMAT))
 
-                elif "END:" in self.msg3:
+                elif "END:" in self.msg3 or "CLOSED:" in self.msg3 or "AWAKE:" in self.msg3:
 
                     self.host.send((self.msg3).encode(self.FORMAT))
+
 
         except:
 
