@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import ttk as tick
 from tkinter import PhotoImage
-
+import os
 import random
 import string
 import socket
-
+from PIL import ImageTk as itk
+import PIL.Image
 from tkinter import messagebox
 
 from threading import Thread
@@ -370,9 +371,22 @@ class GUI2(cust.CTk): #admin/host UI
         self.clientlist.column("status", minwidth = 0, width = 140, stretch = False)
         self.clientlist.column("activity", minwidth = 0, width = 140, stretch = False)
 
-        self.red = PhotoImage(file = "Lobby + Tracking\\redlight.png")
-        self.green = PhotoImage(file = "Lobby + Tracking\\greenlight.png")
-        self.black = PhotoImage(file = "Lobby + Tracking\\blacklight.png")
+        self.cwd = os.getcwd()
+
+        print (self.cwd)
+
+        self.temp = PIL.Image.open("redlight.png")
+        self.red = itk.PhotoImage(self.temp)
+
+        self.temp2 = PIL.Image.open("greenlight.png")
+        self.green = itk.PhotoImage(self.temp2)
+
+        self.temp3 = PIL.Image.open("blacklight.png")
+        self.black = itk.PhotoImage(self.temp3)
+
+        #self.red = PhotoImage(file = "redlight.png")
+        #self.green = PhotoImage(file = "greenlight.png")
+        #self.black = PhotoImage(file = "blacklight.png")
 
         #self.clientlist = tk.Listbox(self.clientframe)
         #self.clientlist.grid(row = 0, column = 0, sticky= "nswe")
@@ -423,50 +437,51 @@ class GUI2(cust.CTk): #admin/host UI
 
                 self.message = self.host.recv(1024).decode(self.FORMAT)
 
-                action, name = self.message.split(":")
-
                 print (self.message)
 
-                if action == "NAME":
+                if "NAME:" in self.message:
 
-                    #x = self.message.replace("NAME:", "")
+                    x = self.message.replace("NAME:", "")
 
-                    self.clientlist.insert("", cust.END, iid = name, values = name)
+                    self.clientlist.insert("", cust.END, iid = x, values = x)
 
-                    #print (x)
+                    print (x)
 
-                elif action == "END":
+                elif "END:" in self.message:
 
-                    messagebox.showinfo("Client Disconnected!", name + " has left the server.")
+                    x = self.message.replace("END:", "")
 
-                elif action == "NO CLIENTS":
+                    messagebox.showinfo("Client Disconnected!", x + " has left the server.")
+
+                    self.clientlist.delete(x)
+
+                elif "NO CLIENTS:" in self.message:
 
                     messagebox.showerror("No Connections!", "No clients connected to host!")
 
                     self.ecdpower.configure(text = "Off", fg_color = "Red")
 
-                elif action == "CLOSED":
+                elif "CLOSED:" in self.message:
 
-                    #x = self.message.replace("CLOSED:", "")
+                    x = self.message.replace("CLOSED:", "")
 
-                    self.clientlist.set(name, "status", "Eyes are closed")
-                    self.clientlist.set(name, "activity", self.red)
+                    self.clientlist.set(x, "status", "Eyes are closed")
+                    self.clientlist.set(x, "activity", self.red)
 
-                    #self.clientlist.item()
 
-                elif action == "AWAKE":
+                elif "AWAKE:" in self.message:
 
-                    #x = self.message.replace("AWAKE:", "")
+                    x = self.message.replace("AWAKE:", "")
 
-                    self.clientlist.set(name, "status", "Eyes are open")
-                    self.clientlist.set(name, "activity", self.green)
+                    self.clientlist.set(x, "status", "Eyes are open")
+                    self.clientlist.set(x, "activity", self.green)
 
-                elif action == "NFD":
+                elif "NFD:" in self.message:
 
-                    #x = self.message.replace("NFD:", "")
+                    x = self.message.replace("NFD:", "")
 
-                    self.clientlist.set(name, "status", "No Face Detected")
-                    self.clientlist.set(name, "activity", self.black)
+                    self.clientlist.set(x, "status", "No Face Detected")
+                    self.clientlist.set(x, "activity", self.black)
 
                 
 
@@ -509,7 +524,7 @@ class GUI2(cust.CTk): #admin/host UI
         
         #print("Thread closed")
 
-        #self.host.close()
+        self.host.close()
 
         self.master2.destroy()
         
@@ -697,7 +712,7 @@ class GUI3(cust.CTk): #initializes client GUI
 
         self.client.send(("END:" + self.clientname).encode(self.FORMAT))
 
-        #self.client.close()
+        self.client.close()
 
         self.master3.destroy()
 
