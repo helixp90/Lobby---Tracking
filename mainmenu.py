@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk as tick
+from tkinter import PhotoImage
 
 import random
 import string
@@ -77,7 +78,7 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
             self.back = cust.CTkButton(self.masterframe2, text = "Back", fg_color = "Red", text_color = "White", hover_color = "Maroon", state = "disabled", command = lambda: self.goback())
             self.back.pack(side = cust.BOTTOM, pady=5, padx=5)
 
-            self.exit = cust.CTkButton(self.masterframe2, text = "Exit", fg_color = "Red", text_color = "White", hover_color = "Maroon", command = lambda: self.turnoff())
+            self.exit = cust.CTkButton(self.masterframe2, text = "Exit", fg_color = "Red", text_color = "White", hover_color = "Maroon", command = exit)
             self.exit.pack(side = cust.BOTTOM, pady = 5, padx = 5)
 
         def turnoff(self):
@@ -369,6 +370,10 @@ class GUI2(cust.CTk): #admin/host UI
         self.clientlist.column("status", minwidth = 0, width = 140, stretch = False)
         self.clientlist.column("activity", minwidth = 0, width = 140, stretch = False)
 
+        self.red = PhotoImage(file = "Lobby + Tracking\\redlight.png")
+        self.green = PhotoImage(file = "Lobby + Tracking\\greenlight.png")
+        self.black = PhotoImage(file = "Lobby + Tracking\\blacklight.png")
+
         #self.clientlist = tk.Listbox(self.clientframe)
         #self.clientlist.grid(row = 0, column = 0, sticky= "nswe")
 
@@ -418,41 +423,52 @@ class GUI2(cust.CTk): #admin/host UI
 
                 self.message = self.host.recv(1024).decode(self.FORMAT)
 
+                action, name = self.message.split(":")
+
                 print (self.message)
 
-                if "NAME:" in self.message:
+                if action == "NAME":
 
-                    x = self.message.replace("NAME:", "")
+                    #x = self.message.replace("NAME:", "")
 
-                    self.clientlist.insert("", cust.END, iid = x, values = x)
+                    self.clientlist.insert("", cust.END, iid = name, values = name)
 
-                    print (x)
+                    #print (x)
 
-                elif "END:" in self.message:
+                elif action == "END":
 
-                    messagebox.showinfo("Client Disconnected!", self.message.replace("END:", "") + " has left the server.")
+                    messagebox.showinfo("Client Disconnected!", name + " has left the server.")
 
-                elif self.message == "NO CLIENTS:":
+                elif action == "NO CLIENTS":
 
                     messagebox.showerror("No Connections!", "No clients connected to host!")
 
                     self.ecdpower.configure(text = "Off", fg_color = "Red")
 
-                elif "CLOSED:" in self.message:
+                elif action == "CLOSED":
 
-                    x = self.message.replace("CLOSED:", "")
+                    #x = self.message.replace("CLOSED:", "")
 
-                    self.clientlist.set(x, "status", "Eyes are closed")
-                    self.clientlist.set(x, "activity", "Eyes are closed")
+                    self.clientlist.set(name, "status", "Eyes are closed")
+                    self.clientlist.set(name, "activity", self.red)
 
                     #self.clientlist.item()
 
-                elif "AWAKE:" in self.message:
+                elif action == "AWAKE":
 
-                    x = self.message.replace("AWAKE:", "")
+                    #x = self.message.replace("AWAKE:", "")
 
-                    self.clientlist.set(x, "status", "Eyes are open")
-                    self.clientlist.set(x, "activity", "Eyes are open")
+                    self.clientlist.set(name, "status", "Eyes are open")
+                    self.clientlist.set(name, "activity", self.green)
+
+                elif action == "NFD":
+
+                    #x = self.message.replace("NFD:", "")
+
+                    self.clientlist.set(name, "status", "No Face Detected")
+                    self.clientlist.set(name, "activity", self.black)
+
+                
 
         except Exception:
 
