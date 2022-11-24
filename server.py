@@ -41,44 +41,13 @@ class INITSERVER():
         self.clients, self.names = [], []
 
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind(self.ADDRESS)
 
         self.host = ""
 
         self.t = Thread(target = self.startChat)
         self.t.start()
-
-    def terminate(self):
-
-        self.flag.set()
-
-    def commence(self):
-
-        self.flag.clear()    
-
-
-    def revlobbyname(a):
-
-        global lobbyname
-
-        lobbyname = a
-
-    def givlobbyname():
-
-        #global lobbyname
-
-        return lobbyname
-
-
-    def revhostcode(a):
-
-        global hostlcode
-
-        hostlcode = a
-
-    def givhostcode():
-
-        return hostlcode
 
 
     def startChat(self):
@@ -135,9 +104,9 @@ class INITSERVER():
 
                     print (self.lobbycode)
 
-                    self.client = self.conn
+                    #self.client = self.conn
 
-                    self.t3 = Thread(target = self.startClient)
+                    self.t3 = Thread(target = self.startClient, args = (self.conn,))
                     self.t3.start()
 
                 #self.clients.append(self.conn)
@@ -205,19 +174,19 @@ class INITSERVER():
             print (traceback.format_exc())
             
 
-    def startClient(self):
+    def startClient(self, conn):
 
         try:
 
             while True:
 
-                self.msg3 = self.client.recv(1024).decode(self.FORMAT)
+                self.msg3 = conn.recv(1024).decode(self.FORMAT)
 
                 if "CLIENT:" in self.msg3:
 
-                    self.clients.append(self.client)
+                    self.clients.append(conn)
 
-                    self.client.send(("CLIENT:" + self.lobbyname).encode(self.FORMAT))
+                    conn.send(("CLIENT:" + self.lobbyname).encode(self.FORMAT))
 
                 elif "NAME:" in self.msg3:
 
@@ -227,9 +196,16 @@ class INITSERVER():
 
                     self.host.send(("NAME:" + self.clientname).encode(self.FORMAT))
 
-                elif "END:" in self.msg3 or "CLOSED:" in self.msg3 or "AWAKE:" in self.msg3:
+                elif "CLOSED:" in self.msg3 or "AWAKE:" in self.msg3 or "NFD:" in self.msg3:
 
                     self.host.send((self.msg3).encode(self.FORMAT))
+
+                elif "CLEND:" in self.msg3:
+
+                    self.host.send((self.msg3).encode(self.FORMAT))
+                    conn.send(("CLEND").encode(self.FORMAT))
+
+                    print ("CLEND successful")
 
 
         except:

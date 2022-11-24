@@ -375,18 +375,18 @@ class GUI2(cust.CTk): #admin/host UI
 
         print (self.cwd)
 
-        self.temp = PIL.Image.open("redlight.png")
-        self.red = itk.PhotoImage(self.temp)
+        #self.temp = PIL.Image.open("redlight.png")
+        #self.red = itk.PhotoImage(self.temp)
 
-        self.temp2 = PIL.Image.open("greenlight.png")
-        self.green = itk.PhotoImage(self.temp2)
+        #self.temp2 = PIL.Image.open("greenlight.png")
+        #self.green = itk.PhotoImage(self.temp2)
 
-        self.temp3 = PIL.Image.open("blacklight.png")
-        self.black = itk.PhotoImage(self.temp3)
+        #self.temp3 = PIL.Image.open("blacklight.png")
+        #self.black = itk.PhotoImage(self.temp3)
 
-        #self.red = PhotoImage(file = "redlight.png")
-        #self.green = PhotoImage(file = "greenlight.png")
-        #self.black = PhotoImage(file = "blacklight.png")
+        self.red = PhotoImage(file = "redlight.png")
+        self.green = PhotoImage(file = "greenlight.png")
+        self.black = PhotoImage(file = "blacklight.png")
 
         #self.clientlist = tk.Listbox(self.clientframe)
         #self.clientlist.grid(row = 0, column = 0, sticky= "nswe")
@@ -447,9 +447,9 @@ class GUI2(cust.CTk): #admin/host UI
 
                     print (x)
 
-                elif "END:" in self.message:
+                elif "CLEND:" in self.message:
 
-                    x = self.message.replace("END:", "")
+                    x = self.message.replace("CLEND:", "")
 
                     messagebox.showinfo("Client Disconnected!", x + " has left the server.")
 
@@ -466,7 +466,9 @@ class GUI2(cust.CTk): #admin/host UI
                     x = self.message.replace("CLOSED:", "")
 
                     self.clientlist.set(x, "status", "Eyes are closed")
-                    self.clientlist.set(x, "activity", self.red)
+                    self.clientlist.set(x, "activity", "INACTIVE")
+
+                    #self.clientlist.item(x, image = self.red)
 
 
                 elif "AWAKE:" in self.message:
@@ -474,14 +476,16 @@ class GUI2(cust.CTk): #admin/host UI
                     x = self.message.replace("AWAKE:", "")
 
                     self.clientlist.set(x, "status", "Eyes are open")
-                    self.clientlist.set(x, "activity", self.green)
+                    self.clientlist.set(x, "activity", "ACTIVE")
+
+                    #self.clientlist.item(x, image = self.green)
 
                 elif "NFD:" in self.message:
 
                     x = self.message.replace("NFD:", "")
 
                     self.clientlist.set(x, "status", "No Face Detected")
-                    self.clientlist.set(x, "activity", self.black)
+                    self.clientlist.set(x, "activity", "UNKNOWN")
 
                 
 
@@ -634,9 +638,15 @@ class GUI3(cust.CTk): #initializes client GUI
         self.lname = cust.CTkLabel(self.lnameframe, text = "Lobby Name", text_font = ("Times New Roman", 15), fg = "Black")
         self.lname.grid(row = 0, column = 0, sticky = "nswe")
 
+        # ============ frame_down ============
+
+        self.frame_down.grid_rowconfigure(0, weight = 1)
+        
+        self.frame_down.grid_columnconfigure(0, weight = 1)
+
 
         self.bigframe = cust.CTkFrame(self.frame_down, highlightbackground = "Black", highlightthickness = 2, corner_radius = 0)
-        self.bigframe.grid(row = 1, column = 0, sticky = "nswe", padx = 50, pady = 50)
+        self.bigframe.grid(row = 0, column = 0, sticky = "nswe", padx = 50, pady = 50)
 
         self.lname2 = cust.CTkLabel(self.bigframe, text = "Watching you", text_font = ("Times New Roman", 15), fg = "Blue")
         self.lname2.grid(row = 0, column = 0, sticky = "nswe")
@@ -702,6 +712,16 @@ class GUI3(cust.CTk): #initializes client GUI
 
                     self.flag.clear()
 
+                elif self.message == "CLEND:":
+
+                    #self.flag.set()
+                    #self.rev.join()
+                    #self.flag.clear()
+
+                    print ("WATASHI GA KITA")
+
+                    return
+
 
 
         except Exception:
@@ -710,13 +730,15 @@ class GUI3(cust.CTk): #initializes client GUI
 
     def leavewindow(self):
 
-        self.client.send(("END:" + self.clientname).encode(self.FORMAT))
+        self.client.send(("CLEND:" + self.clientname).encode(self.FORMAT))
 
-        self.client.close()
+        #self.thread.join()
 
         self.master3.destroy()
 
         g.deiconify()
+
+        self.client.close()
 
     def eye_aspect_ratio(self, eye):
         # compute the euclidean distances between the two sets of
