@@ -470,6 +470,13 @@ class GUI2(cust.CTk): #admin/host UI
 
                     #self.clientlist.item(x, image = self.red)
 
+                elif "SLEEPING:" in self.message:
+
+                    x = self.message.replace("SLEEPING:", "")
+
+                    self.clientlist.set(x, "status", "Client is sleeping!!")
+                    self.clientlist.set(x, "activity", "SLEEPING")
+
 
                 elif "AWAKE:" in self.message:
 
@@ -763,6 +770,8 @@ class GUI3(cust.CTk): #initializes client GUI
 
             self.result = ""
 
+            counter = 0
+
             self.vs.start()
 
             print ("INSIDE FOR LOOP THE: " + self.SERVER)
@@ -853,9 +862,13 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     print ("Eyes closed")
 
+                                    self.notiflist.delete(0, cust.END)
+
                                     self.notiflist.insert("end", "Host is watching you!")
 
                                     self.client.send(("CLOSED:" + self.clientname).encode(self.FORMAT))
+
+                                    
 
                                     # otherwise, the eye aspect ratio is not below the blink
                                     # threshold
@@ -868,6 +881,8 @@ class GUI3(cust.CTk): #initializes client GUI
                                     print ("Eyes open")
 
                                     self.result = "AWAKE:"
+
+                                    self.notiflist.delete(0, cust.END)
 
                                     self.notiflist.insert("end", "Thank you for keeping attention")
 
@@ -889,7 +904,29 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     self.result = ""
 
+                                    counter = 0
+
                                     print ("inside temp stuff")
+
+                                elif self.temp == self.result and self.temp == "CLOSED:":
+
+                                    if counter != 300:
+
+                                        time.sleep(1)
+
+                                        counter += 1
+
+                                        print ("Counter added " + str(counter))
+
+                                    else:
+
+                                        self.client.send(("SLEEPING:" + self.clientname).encode(self.FORMAT))
+
+                                        counter = 0
+
+                                        print ("COUNTER = 0")
+
+                                        #self.result = ""
 
                             #cv2.imshow("Eye Close Detection Using EAR", frame)
 
@@ -903,6 +940,8 @@ class GUI3(cust.CTk): #initializes client GUI
                 self.result = ""
 
                 self.flag.clear()
+
+                #counter = 0
                 #cv2.destroyAllWindows()
 
                 #self.master3.after(1000, self.startstream2)
