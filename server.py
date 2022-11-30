@@ -58,9 +58,9 @@ class INITSERVER():
 
         #self.server.settimeout(0.005) # time out after 5 ms.
 
-        try:
-
-            while True: 
+        while True:
+            
+            try:
 
                 self.conn, self.addr = self.server.accept()
 
@@ -111,9 +111,9 @@ class INITSERVER():
 
                 #self.clients.append(self.conn)
 
-        except:
+            except:
 
-            print (traceback.format_exc())
+                print (traceback.format_exc())
 
     def startHost(self):
 

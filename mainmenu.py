@@ -655,7 +655,7 @@ class GUI3(cust.CTk): #initializes client GUI
         self.bigframe = cust.CTkFrame(self.frame_down, highlightbackground = "Black", highlightthickness = 2, corner_radius = 0)
         self.bigframe.grid(row = 0, column = 0, sticky = "nswe", padx = 50, pady = 50)
 
-        self.lname2 = cust.CTkLabel(self.bigframe, text = "Watching you", text_font = ("Times New Roman", 15), fg = "Blue")
+        self.lname2 = cust.CTkLabel(self.bigframe, text_font = ("Times New Roman", 15), fg = "Blue")
         self.lname2.grid(row = 0, column = 0, sticky = "nswe")
 
 
@@ -705,6 +705,8 @@ class GUI3(cust.CTk): #initializes client GUI
                 if "CLIENT:" in self.message:
 
                     self.lname.configure(text = self.message.replace("CLIENT:", "") + "'s Lobby")
+
+                    self.lname2.configure(text = "Welcome to " + self.message.replace("CLIENT:", "") + "'s Lobby!")
 
                 elif self.message == "ON:":
 
@@ -862,9 +864,9 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     print ("Eyes closed")
 
-                                    self.notiflist.delete(0, cust.END)
+                                    #self.notiflist.delete(0, cust.END)
 
-                                    self.notiflist.insert("end", "Host is watching you!")
+                                    #self.notiflist.insert("end", "Host is watching you!")
 
                                     self.client.send(("CLOSED:" + self.clientname).encode(self.FORMAT))
 
@@ -898,7 +900,7 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     self.temp = "AWAKE:"
 
-                                if self.temp != self.result:
+                                if self.temp != self.result and self.temp == "AWAKE:":
 
                                     self.client.send((self.temp + self.clientname).encode(self.FORMAT))
 
@@ -906,7 +908,9 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     counter = 0
 
-                                    print ("inside temp stuff")
+                                    print ("inside AWAKE stuff")
+
+                                    self.notiflist.insert("end", "Thank you for keeping attention")
 
                                 elif self.temp == self.result and self.temp == "CLOSED:":
 
@@ -925,6 +929,10 @@ class GUI3(cust.CTk): #initializes client GUI
                                         counter = 0
 
                                         print ("COUNTER = 0")
+
+                                        self.notiflist.delete(0, cust.END)
+
+                                        self.notiflist.insert("end", "Host is watching you!")
 
                                         #self.result = ""
 
