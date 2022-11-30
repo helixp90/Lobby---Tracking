@@ -34,7 +34,7 @@ class INITSERVER():
 
         self.PORT = 5000    
         #self.SERVER = socket.gethostbyname(socket.gethostname()) #use for multiple computers
-        self.SERVER = "192.168.0.19" #use this for testing purposes within the same computer; caveat is server only displays results for one terminal not multiple 
+        self.SERVER = "" #use this for testing purposes within the same computer; caveat is server only displays results for one terminal not multiple 
         self.ADDRESS = (self.SERVER, self.PORT)
         self.FORMAT = "utf-8"
 
