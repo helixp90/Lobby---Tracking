@@ -54,7 +54,7 @@ class INITSERVER():
 
         print("server is working on " + self.SERVER)
 
-        self.server.listen(30)
+        self.server.listen(31)
 
         #self.server.settimeout(0.005) # time out after 5 ms.
 

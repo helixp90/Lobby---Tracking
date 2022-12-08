@@ -95,7 +95,7 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
         
             #self.SERVER = "localhost" #exact server address if multiple computers; use "localhost" if server is within the same computer for testing purposes
 
-            self.SERVER = "" #set exact ip address of server 
+            self.SERVER = "" #server address
             self.ADDRESS = (self.SERVER, self.PORT)
             self.FORMAT = "utf-8"
 
