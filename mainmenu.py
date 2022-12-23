@@ -920,6 +920,8 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                         counter += 1
 
+                                        self.result = self.temp
+
                                         print ("Counter added " + str(counter))
 
                                     else:
