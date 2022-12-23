@@ -95,7 +95,7 @@ class GUI(cust.CTk):  #initializes root/mainmenu window
         
             #self.SERVER = "localhost" #exact server address if multiple computers; use "localhost" if server is within the same computer for testing purposes
 
-            self.SERVER = "" #server address
+            self.SERVER = "192.168.0.19" #server address
             self.ADDRESS = (self.SERVER, self.PORT)
             self.FORMAT = "utf-8"
 
@@ -904,7 +904,7 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     self.client.send((self.temp + self.clientname).encode(self.FORMAT))
 
-                                    self.result = ""
+                                    self.result = self.temp
 
                                     counter = 0
 
@@ -934,8 +934,9 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                         self.notiflist.insert("end", "Host is watching you!")
 
-                                        #self.result = ""
+                                        self.result = self.temp
 
+                            #print ("It's actually working")
                             #cv2.imshow("Eye Close Detection Using EAR", frame)
 
                             
@@ -947,7 +948,9 @@ class GUI3(cust.CTk): #initializes client GUI
 
                 self.result = ""
 
-                self.flag.clear()
+                self.temp = ""
+
+                #self.flag.clear()
 
                 #counter = 0
                 #cv2.destroyAllWindows()
