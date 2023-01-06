@@ -959,7 +959,7 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     self.temp = ""
 
-                            else:
+                            else: #value of current frame becomes value of previous frame
 
                                 self.result = self.temp
                                 self.temp = ""
