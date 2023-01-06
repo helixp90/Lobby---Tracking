@@ -709,6 +709,8 @@ class GUI3(cust.CTk): #initializes client GUI
                     self.lname2.configure(text = "Welcome to " + self.message.replace("CLIENT:", "") + "'s Lobby!")
 
                 elif self.message == "ON:":
+                    
+                    #self.flag.clear()
 
                     self.rev = Thread(target = self.startstream2)
                     self.rev.start()
@@ -767,9 +769,9 @@ class GUI3(cust.CTk): #initializes client GUI
 
     def startstream2(self):
 
-
         try:
 
+            self.temp = ""
             self.result = ""
 
             counter = 0
@@ -798,150 +800,170 @@ class GUI3(cust.CTk): #initializes client GUI
 
             while not self.flag.is_set():
 
-                    #while True:
+                frame = self.vs.read()
 
-                    # if this is a file video stream, then we need to check if
-                    # there any more frames left in the buffer to process
+                if frame.size == 0:
 
-                    # grab the frame from the threaded video file stream, resize
-                    # it, and convert it to grayscale
-                    # channels)
-                    frame = self.vs.read()
+                    self.client.send(("NFD:" + self.clientname).encode(self.FORMAT))
 
-                    if frame.size == 0:
+                    print ("No Face Detected")
 
-                        self.client.send(("NFD:" + self.clientname).encode(self.FORMAT))
+                    return
 
-                        print ("No Face Detected")
+                else:
 
-                        return
+                    frame = imutils.resize(frame, width = 1080 )
+                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-                    else:
+                    # detect faces in the grayscale frame
+                    rects = detector(gray, 0)
 
-                        frame = imutils.resize(frame, width = 1080 )
-                        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                    # loop over the face detections
+                    for rect in rects:
+                        # determine the facial landmarks for the face region, then
+                        # convert the facial landmark (x, y)-coordinates to a NumPy
+                        # array
+                        shape = predictor(gray, rect)
+                        shape = face_utils.shape_to_np(shape)
 
-                        # detect faces in the grayscale frame
-                        rects = detector(gray, 0)
+                        # extract the left and right eye coordinates, then use the
+                        # coordinates to compute the eye aspect ratio for both eyes
+                        leftEye = shape[lStart:lEnd]
+                        rightEye = shape[rStart:rEnd]
 
-                        # loop over the face detections
-                        for rect in rects:
-                            # determine the facial landmarks for the face region, then
-                            # convert the facial landmark (x, y)-coordinates to a NumPy
-                            # array
-                            shape = predictor(gray, rect)
-                            shape = face_utils.shape_to_np(shape)
+                        leftEAR = self.eye_aspect_ratio(leftEye)
+                        rightEAR = self.eye_aspect_ratio(rightEye)
 
-                            # extract the left and right eye coordinates, then use the
-                            # coordinates to compute the eye aspect ratio for both eyes
-                            leftEye = shape[lStart:lEnd]
-                            rightEye = shape[rStart:rEnd]
+                        # average the eye aspect ratio together for both eyes
+                        ear = (leftEAR + rightEAR)
 
-                            leftEAR = self.eye_aspect_ratio(leftEye)
-                            rightEAR = self.eye_aspect_ratio(rightEye)
+                        # compute the convex hull for the left and right eye, then
+                        # visualize each of the eyes
+                        leftEyeHull = cv2.convexHull(leftEye)
+                        rightEyeHull = cv2.convexHull(rightEye)
+                        cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
+                        cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
 
-                            # average the eye aspect ratio together for both eyes
-                            ear = (leftEAR + rightEAR)
+                        if self.result == "" or self.result.isspace(): #check if self.result value is null
 
-                            # compute the convex hull for the left and right eye, then
-                            # visualize each of the eyes
-                            leftEyeHull = cv2.convexHull(leftEye)
-                            rightEyeHull = cv2.convexHull(rightEye)
-                            cv2.drawContours(frame, [leftEyeHull], -1, (0, 255, 0), 1)
-                            cv2.drawContours(frame, [rightEyeHull], -1, (0, 255, 0), 1)
+                            # check to see if the eye aspect ratio is below the blink
+                            # threshold, and if so, increment the blink frame counter
+                            if ear <= EYE_AR_THRESH:
+                                cv2.putText(frame, "Eye: {}".format("close"), (10, 30),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                                cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-                            if self.result == "" or self.result.isspace():
+                                self.result = "CLOSED:"
 
-                                # check to see if the eye aspect ratio is below the blink
-                                # threshold, and if so, increment the blink frame counter
-                                if ear < EYE_AR_THRESH:
-                                    cv2.putText(frame, "Eye: {}".format("close"), (10, 30),
-                                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                                    cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
-                                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                                print ("First frame, eyes are closed or Previous frame has no face")
 
-                                    self.result = "CLOSED:"
+                                #self.notiflist.delete(0, cust.END)
 
-                                    print ("Eyes closed")
+                                self.notiflist.insert("end", "Host is watching you!")
 
-                                    #self.notiflist.delete(0, cust.END)
+                                self.client.send((self.result + self.clientname).encode(self.FORMAT))
 
-                                    #self.notiflist.insert("end", "Host is watching you!")
+                                # otherwise, the eye aspect ratio is not below the blink
+                                # threshold
+                            elif ear > EYE_AR_THRESH:
+                                cv2.putText(frame, "Eye: {}".format("Open"), (10, 30),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                                cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-                                    self.client.send(("CLOSED:" + self.clientname).encode(self.FORMAT))
+                                print ("First frame, Eyes open")
 
-                                    
+                                self.result = "AWAKE:"
 
-                                    # otherwise, the eye aspect ratio is not below the blink
-                                    # threshold
-                                else:
-                                    cv2.putText(frame, "Eye: {}".format("Open"), (10, 30),
-                                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-                                    cv2.putText(frame, "EAR: {:.2f}".format(ear), (300, 30),
-                                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                                #self.notiflist.delete(0, cust.END)
 
-                                    print ("Eyes open")
+                                self.notiflist.insert("end", "Thank you for keeping attention")
 
-                                    self.result = "AWAKE:"
-
-                                    self.notiflist.delete(0, cust.END)
-
-                                    self.notiflist.insert("end", "Thank you for keeping attention")
-
-                                    self.client.send(("AWAKE:" + self.clientname).encode(self.FORMAT))
+                                self.client.send((self.result + self.clientname).encode(self.FORMAT))
 
                             else:
 
-                                if ear < EYE_AR_THRESH:
+                                continue
 
-                                    self.temp = "CLOSED:"
+                        else:
+
+                            if ear <= EYE_AR_THRESH:
+
+                                self.temp = "CLOSED:"
+
+                            elif ear > EYE_AR_THRESH:
+
+                                self.temp = "AWAKE:"
+
+                            #else: 
+
+                                #continue
+
+                            #print ("TEMP VALUE IS: " + self.temp) #for checking
+                            #print ("RESULT VALUE IS: " + self.result) #for checking
+
+                            if self.temp != self.result and self.temp == "AWAKE:": #if current frame and previous frame are not the same, and current frame == "AWAKE:", this means the previous frame was closed and that client has just opened their eyes
+
+                                self.client.send((self.temp + self.clientname).encode(self.FORMAT))
+
+                                #print ("SELF.RESULT BEFORE: " + self.result)
+
+                                self.result = self.temp #value of current frame becomes value of previous frame
+
+                                #print ("SELF.RESULT AFTER: " + self.result)
+
+                                self.temp = ""
+
+                                counter = 0
+
+                                print ("Eyes are open again")
+
+                                self.notiflist.insert("end", "Thank you for keeping attention 222222")
+
+                            elif self.temp == self.result and self.temp == "CLOSED:": #if current frame has the same value as the previous frame, and current frame == CLOSED:, that means the client has been closing their eyes consecutively
+
+                                if counter != 3:
+
+                                    time.sleep(1)
+
+                                    counter += 1
+
+                                    #print ("SELF.RESULT BEFORE: " + self.result)
+
+                                    self.result = self.temp #value of current frame becomes value of previous frame
+
+                                    #print ("SELF.RESULT AFTER: " + self.result)
+
+                                    self.temp = ""
+
+                                    print ("Counter added " + str(counter))
 
                                 else:
 
-                                    self.temp = "AWAKE:"
-
-                                if self.temp != self.result and self.temp == "AWAKE:":
-
-                                    self.client.send((self.temp + self.clientname).encode(self.FORMAT))
-
-                                    self.result = self.temp
+                                    self.client.send(("SLEEPING:" + self.clientname).encode(self.FORMAT))
 
                                     counter = 0
 
-                                    print ("inside AWAKE stuff")
+                                    print ("COUNTER = 0")
 
-                                    self.notiflist.insert("end", "Thank you for keeping attention")
+                                    self.notiflist.delete(0, cust.END)
 
-                                elif self.temp == self.result and self.temp == "CLOSED:":
+                                    self.notiflist.insert("end", "Host is watching you 2!")
 
-                                    if counter != 300:
+                                    #print ("SELF.RESULT BEFORE: " + self.result)
 
-                                        time.sleep(1)
+                                    self.result = self.temp #value of current frame becomes value of previous frame
 
-                                        counter += 1
+                                    #print ("SELF.RESULT AFTER: " + self.result)
 
-                                        self.result = self.temp
+                                    self.temp = ""
 
-                                        print ("Counter added " + str(counter))
+                            else:
 
-                                    else:
-
-                                        self.client.send(("SLEEPING:" + self.clientname).encode(self.FORMAT))
-
-                                        counter = 0
-
-                                        print ("COUNTER = 0")
-
-                                        self.notiflist.delete(0, cust.END)
-
-                                        self.notiflist.insert("end", "Host is watching you!")
-
-                                        self.result = self.temp
-
-                            #print ("It's actually working")
-                            #cv2.imshow("Eye Close Detection Using EAR", frame)
-
-                            
+                                self.result = self.temp
+                                self.temp = ""
+   
             else:
 
                 print ("Inside destroy")
@@ -952,13 +974,6 @@ class GUI3(cust.CTk): #initializes client GUI
 
                 self.temp = ""
 
-                #self.flag.clear()
-
-                #counter = 0
-                #cv2.destroyAllWindows()
-
-                #self.master3.after(1000, self.startstream2)
-
                 return
 
         except Exception as e:
@@ -968,6 +983,7 @@ class GUI3(cust.CTk): #initializes client GUI
             print ("No Face Detected")
 
             print (traceback.format_exc())
+
 
 if __name__ == "__main__":
 
