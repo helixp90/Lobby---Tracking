@@ -850,6 +850,23 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                 self.client.send((self.temp + self.clientname).encode(self.FORMAT))
 
+                            elif self.temp == self.result and self.temp == "NFD:": 
+
+                                time.sleep(1)
+
+                                counter += 1
+
+                                #print ("SELF.RESULT BEFORE: " + self.result)
+
+                                #self.result = self.temp #value of current frame becomes value of previous frame
+
+                                #print ("SELF.RESULT AFTER: " + self.result)
+
+                                #self.temp = ""
+
+                                print ("Counter added " + str(counter))
+
+                                    
                             self.result = self.temp #value of current frame becomes value of previous frame
                             self.temp = ""
 
@@ -953,7 +970,9 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     #self.temp = ""
 
-                                    #counter = 0
+                                    print ("Client has been gone for " + str(counter) + " seconds!")
+
+                                    counter = 0
 
                                     self.notiflist.delete(0, cust.END)
 
