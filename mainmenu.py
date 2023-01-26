@@ -275,13 +275,13 @@ class GUI2(cust.CTk): #admin/host UI
         self.master2.grid_rowconfigure(0, weight = 1)
 
         self.master2.grid_columnconfigure(0, weight = 1)
-        self.master2.grid_columnconfigure(1, weight = 1)
+        #self.master2.grid_columnconfigure(1, weight = 1)
 
         self.frame_left = cust.CTkFrame(self.master2, corner_radius = 0, bg_color = "White")
         self.frame_left.grid(row = 0, column = 0, sticky = "nswe", padx = 20, pady = 20)
 
-        self.frame_right = cust.CTkFrame(self.master2, corner_radius = 0, width = 180)
-        self.frame_right.grid(row = 0, column = 1, sticky= "nswe")
+        #self.frame_right = cust.CTkFrame(self.master2, corner_radius = 0, width = 180)
+        #self.frame_right.grid(row = 0, column = 1, sticky= "nswe")
 
         # ============ frame_left ============
 
@@ -313,7 +313,7 @@ class GUI2(cust.CTk): #admin/host UI
         self.ecdpower.grid(row = 1, column = 2)
 
         self.bigframe = cust.CTkFrame(self.frame_left, corner_radius = 0, border_color = "Black")
-        self.bigframe.grid(row = 4, column = 0, sticky= "nswe", columnspan = 2, rowspan = 4, pady = 20, padx = 20)
+        self.bigframe.grid(row = 4, column = 0, sticky = "nswe", columnspan = 2, rowspan = 4, pady = 20, padx = 20)
 
 
         self.bigframe.grid_rowconfigure(0, weight = 1)
@@ -355,9 +355,9 @@ class GUI2(cust.CTk): #admin/host UI
 
 
         self.clientframe = cust.CTkFrame(self.bigframe, corner_radius = 0, border_color = "Blue")
-        self.clientframe.grid(row = 1, column = 0, sticky= "nswe")
+        self.clientframe.grid(row = 1, column = 0, sticky = "nswe")
 
-        self.clientframe.pack_propagate(False)
+        #self.clientframe.pack_propagate(True)
 
 
         self.columns = ("name", "status", "activity")
@@ -367,9 +367,9 @@ class GUI2(cust.CTk): #admin/host UI
 
         self.clientlist.column("#0", minwidth = 0, width = 10, stretch = False)
 
-        self.clientlist.column("name", minwidth = 0, width = 140, stretch = False)
-        self.clientlist.column("status", minwidth = 0, width = 140, stretch = False)
-        self.clientlist.column("activity", minwidth = 0, width = 140, stretch = False)
+        self.clientlist.column("name", minwidth = 0, width = 200, stretch = True)
+        self.clientlist.column("status", minwidth = 0, width = 200, stretch = True)
+        self.clientlist.column("activity", minwidth = 0, width = 200, stretch = True)
 
         self.cwd = os.getcwd()
 
@@ -393,21 +393,21 @@ class GUI2(cust.CTk): #admin/host UI
 
         # ============ frame_right ============
 
-        self.frame_right.grid_rowconfigure(0, weight = 1)
-        self.frame_right.grid_rowconfigure(1, weight = 1, minsize = 10)
+        #self.frame_right.grid_rowconfigure(0, weight = 1)
+        #self.frame_right.grid_rowconfigure(1, weight = 1, minsize = 10)
 
-        self.frame_right.grid_columnconfigure(0, weight = 1)
+        #self.frame_right.grid_columnconfigure(0, weight = 1)
 
-        self.notiframe = cust.CTkFrame(self.frame_right, border_color = "Blue")
-        self.notiframe.grid(row = 0, column = 0, sticky = "nswe")
-
-
-        self.lnotif = cust.CTkLabel(self.notiframe, text = "Sleeping Notification", text_font = ("Times New Roman", 10), fg = "Black")
-        self.lnotif.grid(row = 0, column = 0, sticky = "nswe")
+        #self.notiframe = cust.CTkFrame(self.frame_right, border_color = "Blue")
+        #self.notiframe.grid(row = 0, column = 0, sticky = "nswe")
 
 
-        self.notiflist = tk.Listbox(self.frame_right)
-        self.notiflist.grid(row = 1, column = 0, sticky = "nswe", columnspan = 1, rowspan = 2, pady = 10, padx = 10)
+        #self.lnotif = cust.CTkLabel(self.notiframe, text = "Sleeping Notification", text_font = ("Times New Roman", 10), fg = "Black")
+        #self.lnotif.grid(row = 0, column = 0, sticky = "nswe")
+
+
+        #self.notiflist = tk.Listbox(self.frame_right)
+        #self.notiflist.grid(row = 1, column = 0, sticky = "nswe", columnspan = 1, rowspan = 2, pady = 10, padx = 10)
 
         self.makelobbycode()
 
@@ -778,7 +778,7 @@ class GUI3(cust.CTk): #initializes client GUI
 
             counter = 0
 
-            
+            nfdcounter = 0
 
             self.vs.start()
 
@@ -823,56 +823,70 @@ class GUI3(cust.CTk): #initializes client GUI
                     rects = detector(gray, 0)
 
                     if rects is None or not rects: #if camera doesn't detect client's face
-                    
-                        if self.result == "" or self.result.isspace(): #checks if there were previous frames
 
-                            print (self.result + "s")
+                        if nfdcounter != 5:
 
-                            self.result = "NFD:"
+                            time.sleep(1)
 
-                            print ("NO FACE DETECTED")
+                            nfdcounter += 1
 
-                            self.notiflist.insert("end", "NO FACE DETECTED")
-
-                            self.client.send((self.result + self.clientname).encode(self.FORMAT))
+                            print ("NFD Counter added " + str(nfdcounter))
 
                         else:
 
-                            self.temp = "NFD:"
+                            if self.result == "" or self.result.isspace(): #checks if there were previous frames
 
-                            if self.result != self.temp:
+                                print (self.result + "s")
 
-                                self.notiflist.delete(0, cust.END)
+                                self.result = "NFD:"
+
+                                print ("NO FACE DETECTED")
 
                                 self.notiflist.insert("end", "NO FACE DETECTED")
 
-                                print ("Client has disappeared!")
+                                self.client.send((self.result + self.clientname).encode(self.FORMAT))
 
-                                self.client.send((self.temp + self.clientname).encode(self.FORMAT))
+                            else:
 
-                            elif self.temp == self.result and self.temp == "NFD:": 
+                                self.temp = "NFD:"
 
-                                time.sleep(1)
+                                if self.result != self.temp:
 
-                                counter += 1
+                                    self.notiflist.delete(0, cust.END)
 
-                                #print ("SELF.RESULT BEFORE: " + self.result)
+                                    self.notiflist.insert("end", "NO FACE DETECTED")
 
-                                #self.result = self.temp #value of current frame becomes value of previous frame
+                                    print ("Client has disappeared!")
 
-                                #print ("SELF.RESULT AFTER: " + self.result)
+                                    self.client.send((self.temp + self.clientname).encode(self.FORMAT))
 
-                                #self.temp = ""
+                                #elif self.temp == self.result and self.temp == "NFD:": 
 
-                                print ("Counter added " + str(counter))
+                                    #time.sleep(1)
 
-                                    
-                            self.result = self.temp #value of current frame becomes value of previous frame
-                            self.temp = ""
+                                    #counter += 1
+
+                                    #print ("SELF.RESULT BEFORE: " + self.result)
+
+                                    #self.result = self.temp #value of current frame becomes value of previous frame
+
+                                    #print ("SELF.RESULT AFTER: " + self.result)
+
+                                    #self.temp = ""
+
+                                    #print ("Counter added " + str(counter))
+
+                                        
+                                self.result = self.temp #value of current frame becomes value of previous frame
+                                self.temp = ""
+
+                                #nfdcounter = 0
 
                     else:
 
                     # loop over the face detections
+
+                        
 
                         for rect in rects:
                             # determine the facial landmarks for the face region, then
@@ -970,9 +984,9 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     #self.temp = ""
 
-                                    print ("Client has been gone for " + str(counter) + " seconds!")
+                                    print ("Client has been gone for " + str(nfdcounter) + " seconds!")
 
-                                    counter = 0
+                                    nfdcounter = 0
 
                                     self.notiflist.delete(0, cust.END)
 
@@ -1014,7 +1028,7 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                         self.temp = ""
 
-                                        print ("Counter added " + str(counter))
+                                        print ("Closed eyes counter added " + str(counter))
 
                                     else:
 
@@ -1051,7 +1065,7 @@ class GUI3(cust.CTk): #initializes client GUI
 
                 self.temp = ""
 
-                counter = 0
+                #counter = 0
 
                 return
 
