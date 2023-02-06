@@ -21,6 +21,9 @@ import imutils
 import time
 import dlib
 import cv2
+import openpyxl as excel
+import pathlib
+import re
 
 lobbyname = ""
 lobbycode = ""
@@ -206,6 +209,61 @@ class INITSERVER():
                     conn.send(("CLEND").encode(self.FORMAT))
 
                     print ("CLEND successful")
+
+                elif "AVG:" in self.msg3:
+
+                    name = re.search(":(.+?);", self.msg3)
+
+                    if name:
+
+                        found = name.group(1)
+
+                    print ("NAME IS: " + found)
+
+                    avg_value = str(self.msg3.partition(";") [2])
+
+                    print ("Average value is " + avg_value)
+
+                    workbook_name = "data.xlsx"
+
+                    path = pathlib.Path("F:\\Personal Programs\\Python\\Lobby + Tracking\\" + workbook_name) #full path of the file must be specified
+
+                    if path.is_file():
+                        
+                        print ("EXCEL FILE FOUND")
+
+                        wb = excel.load_workbook(workbook_name)
+                        sheet = wb.active
+                        max = sheet.max_row
+
+                        
+                        sheet.cell(row = max + 1, column = 1, value = str(found))
+                        sheet.cell(row = max + 1, column = 2, value = avg_value)
+
+                        wb.save(workbook_name)
+
+                    else:
+
+                        print ("EXCEL FILE NOT FOUND")
+
+                        wb = excel.Workbook()
+                        sheet = wb.active
+                        #max = sheet.max_row
+                        #excel_counter = 2
+
+                        sheet["A1"] = "Client Name"
+                        sheet["B1"] = "AVG_EARVALUE"
+
+                        sheet.cell(row = 1, column = 1, value = found)
+                        sheet.cell(row = 1, column = 2, value = avg_value)
+
+                        wb.save(workbook_name)
+
+
+
+
+
+
 
 
         except:

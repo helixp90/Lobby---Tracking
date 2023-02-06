@@ -24,6 +24,7 @@ import imutils
 import time
 import dlib
 import cv2
+import openpyxl as excel
 
 
 lobbyname = ""
@@ -782,6 +783,14 @@ class GUI3(cust.CTk): #initializes client GUI
 
             self.vs.start()
 
+            #wb = excel.Workbook()
+
+            #sheet = wb.active
+
+            sheet_data = []
+
+            excel_counter = 0
+
             print ("INSIDE FOR LOOP THE: " + self.SERVER)
 
             EYE_AR_THRESH = 0.35
@@ -931,6 +940,8 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     self.notiflist.insert("end", "Host is watching you!")
 
+
+
                                     self.client.send((self.result + self.clientname).encode(self.FORMAT))
 
                                     # otherwise, the eye aspect ratio is not below the blink
@@ -954,6 +965,35 @@ class GUI3(cust.CTk): #initializes client GUI
                                 else:
 
                                     continue
+
+                                if (excel_counter < 50):
+
+                                    excel_counter += 1
+
+                                    sheet_data.append(ear)
+
+                                    print ("Excel_counter added " + str(excel_counter))
+
+                                elif (excel_counter > 50):
+
+                                    continue
+
+                                else:
+
+                                    avg_value = sum(sheet_data) / len(sheet_data)
+
+                                    self.client.send(("AVG:" + self.clientname + ";" + str(avg_value)).encode(self.FORMAT))
+
+                                    excel_counter += 1
+
+                                    #sheet["A1"] = "AVG_EARVALUE"
+                                    #sheet["B1"] = avg_value
+
+                                    #wb.save(self.clientname + ".xlsx")
+
+                                    print ("Excel created")
+
+
 
                             else:
 
@@ -1054,6 +1094,32 @@ class GUI3(cust.CTk): #initializes client GUI
 
                                     self.result = self.temp
                                     self.temp = ""
+
+                                if (excel_counter < 50):
+
+                                    excel_counter += 1
+
+                                    sheet_data.append(ear)
+
+                                    print ("Excel_counter added " + str(excel_counter))
+
+                                elif (excel_counter > 50):
+
+                                    continue
+
+                                else:
+
+                                    avg_value = sum(sheet_data) / len(sheet_data)
+
+                                    self.client.send(("AVG:" + self.clientname + ";" + str(avg_value)).encode(self.FORMAT))
+
+                                    excel_counter += 1
+
+                                    #sheet["A1"] = "AVG_EARVALUE"
+                                    #sheet["B1"] = avg_value
+
+                                    #wb.save(self.clientname + ".xlsx")
+                                    print ("Excel created")
    
             else:
 
