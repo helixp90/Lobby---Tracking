@@ -49,8 +49,15 @@ class INITSERVER():
 
         self.host = ""
 
+        #self.max_threads = 30
+        #self.thread_counter = 0
+
+        #if threading.active_count() <= self.max_threads:
+
         self.t = Thread(target = self.startChat)
         self.t.start()
+
+
 
 
     def startChat(self):

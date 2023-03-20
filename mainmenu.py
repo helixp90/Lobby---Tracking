@@ -452,7 +452,7 @@ class GUI2(cust.CTk): #admin/host UI
 
                     x = self.message.replace("CLEND:", "")
 
-                    messagebox.showinfo("Client Disconnected!", x + " has left the server.")
+                    messagebox.showinfo("Client Disconnected!", x + " has left the server.", parent = self.master2)
 
                     self.clientlist.delete(x)
 
@@ -478,6 +478,8 @@ class GUI2(cust.CTk): #admin/host UI
                     self.clientlist.set(x, "status", "Client is sleeping!!")
                     self.clientlist.set(x, "activity", "SLEEPING")
 
+                    messagebox.showinfo("Client Asleep!", x + " has their eyes closed for 5 minutes straight.", parent = self.master2)
+
 
                 elif "AWAKE:" in self.message:
 
@@ -494,6 +496,8 @@ class GUI2(cust.CTk): #admin/host UI
 
                     self.clientlist.set(x, "status", "No Face Detected")
                     self.clientlist.set(x, "activity", "UNKNOWN")
+
+                    messagebox.showinfo("Client Disappeared!", x + "'s camera is online but no face is detected.", parent = self.master2)
 
                 
 
@@ -1131,7 +1135,9 @@ class GUI3(cust.CTk): #initializes client GUI
 
                 self.temp = ""
 
-                #counter = 0
+                counter = 0
+
+                nfdcounter = 0
 
                 return
 
